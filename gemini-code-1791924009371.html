@@ -1,37 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Meta-Product Modeling Prototype</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <header class="app-header">
-    <h1>Meta-Product Visualizer</h1>
-    <span class="badge">Prototype v0.1</span>
-  </header>
+// Meta-Product Visualizer Prototype - v0.2
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Meta-Product Visualizer initialized.");
 
-  <div class="app-container">
-    <!-- Sidebar for controls, configuration, and options -->
-    <aside class="sidebar">
-      <h2>Product Options</h2>
-      <div id="controls-container">
-        <p class="placeholder-text">Options and choices will appear here...</p>
+  // Populate Sidebar Controls
+  const controlsContainer = document.getElementById("controls-container");
+  controlsContainer.innerHTML = `
+    <div class="control-group">
+      <label for="product-name">Product Model Name</label>
+      <input type="text" id="product-name" value="Base Model v1" />
+    </div>
+    <div class="control-group" style="margin-top: 1rem;">
+      <label>Select Variants:</label>
+      <div style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+        <label><input type="checkbox" checked /> Structure Node A</label>
+        <label><input type="checkbox" /> Structure Node B</label>
       </div>
-    </aside>
+    </div>
+  `;
 
-    <!-- Main stage for visual product modeling -->
-    <main class="canvas-area">
-      <div id="viewport" class="viewport">
-        <div class="placeholder-text">
-          <h3>Product Visualization Canvas</h3>
-          <p>Ready to build structure view.</p>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <script src="app.js"></script>
-</body>
-</html>
+  // Populate Canvas Viewport
+  const viewport = document.getElementById("viewport");
+  viewport.innerHTML = `
+    <div class="product-structure-tree">
+      <h3 style="color: #0d6efd; margin-bottom: 0.5rem;">[ Root Meta-Product ]</h3>
+      <p style="color: #6c757d; font-size: 0.9rem;">Interactive structure nodes will render here next.</p>
+    </div>
+  `;
+});
