@@ -10,7 +10,7 @@
   <header class="app-header">
     <div class="header-left">
       <h1 id="header-title">Door Meta-Product Manager</h1>
-      <span class="badge">Door Configurator v0.5</span>
+      <span class="badge">Door Configurator v0.6</span>
     </div>
     <div class="header-right">
       <button id="btn-back-to-list" class="btn btn-secondary hidden">&larr; Back to Door List</button>
@@ -40,50 +40,12 @@
     </div>
   </section>
 
-  <!-- View 2: Interactive Door Configurator & Canvas -->
+  <!-- View 2: Hierarchical Tree Editor View -->
   <section id="view-configurator" class="view-section hidden">
-    <div class="meta-summary-bar">
-      <div class="summary-item">
-        <span class="summary-label">Door Model</span>
-        <span id="summary-name" class="summary-value">--</span>
+    <div class="tree-editor-container">
+      <div id="tree-root-wrapper" class="tree-root-wrapper">
+        <!-- Dynamically rendered hierarchy -->
       </div>
-      <div class="summary-item">
-        <span class="summary-label">Product Line</span>
-        <span id="summary-line" class="summary-value">--</span>
-      </div>
-      <div class="summary-item">
-        <span class="summary-label">Creator</span>
-        <span id="summary-creator" class="summary-value">--</span>
-      </div>
-      <div class="summary-item">
-        <span class="summary-label">Last Editor</span>
-        <span id="summary-editor" class="summary-value">--</span>
-      </div>
-      <div class="summary-item">
-        <span class="summary-label">Last Modified</span>
-        <span id="summary-date" class="summary-value">--</span>
-      </div>
-      <div class="summary-item">
-        <span class="summary-label">Features</span>
-        <span id="summary-count" class="summary-value">0</span>
-      </div>
-    </div>
-
-    <div class="app-container">
-      <aside class="sidebar">
-        <div class="sidebar-header">
-          <h2>Features & Sub-Features</h2>
-          <button id="btn-add-feature" class="btn btn-primary btn-sm">+ Add Top Feature</button>
-        </div>
-        <div id="controls-container"></div>
-      </aside>
-
-      <main class="canvas-area">
-        <div id="viewport" class="viewport">
-          <svg id="svg-connectors" class="svg-connectors"></svg>
-          <div id="tree-canvas" class="tree-canvas"></div>
-        </div>
-      </main>
     </div>
   </section>
 
@@ -111,31 +73,6 @@
         <div class="modal-footer">
           <button type="button" id="btn-cancel-modal" class="btn btn-secondary">Cancel</button>
           <button type="submit" class="btn btn-primary">Save Door Model</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Modal for Adding Sub-Feature -->
-  <div id="modal-subfeature" class="modal-overlay hidden">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3>Add Sub-Feature / Choice</h3>
-        <button id="btn-close-submodal" class="btn-close">&times;</button>
-      </div>
-      <form id="form-add-subfeature">
-        <input type="hidden" id="subfeature-feature-id" value="" />
-        <div class="form-group">
-          <label for="input-sub-name">Sub-Feature Name *</label>
-          <input type="text" id="input-sub-name" required placeholder="e.g. Triple-Pane Insulated Glass" />
-        </div>
-        <div class="form-group">
-          <label for="input-sub-desc">Description / Spec Note</label>
-          <input type="text" id="input-sub-desc" placeholder="e.g. Argon gas filled with Low-E coating" />
-        </div>
-        <div class="modal-footer">
-          <button type="button" id="btn-cancel-submodal" class="btn btn-secondary">Cancel</button>
-          <button type="submit" class="btn btn-primary">Add Sub-Feature</button>
         </div>
       </form>
     </div>
