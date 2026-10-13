@@ -1,4 +1,4 @@
-// Seed Data for Door Meta-Products
+// Hierarchical Door Meta-Products Seed Data
 const initialDoorMetaList = [
   {
     id: "door-001",
@@ -7,85 +7,30 @@ const initialDoorMetaList = [
     creator: "Alex Rivera",
     lastEditor: "Jordan Lee",
     lastModified: "2026-10-13",
-    categories: [
+    features: [
       {
-        id: "frame",
+        id: "feat-frame",
         name: "Frame Material & Core",
-        type: "select",
-        options: [
-          { id: "oak-solid", name: "Solid Natural Oak", desc: "Heavyweight hardwood core frame." },
-          { id: "aluminum-thermal", name: "Thermal Break Aluminum", desc: "Modern insulated aluminum frame." },
-          { id: "fiberglass", name: "Composite Fiberglass", desc: "High weather-resistance core." }
-        ],
-        selected: "oak-solid"
-      },
-      {
-        id: "glass",
-        name: "Glass Panel Options",
-        type: "select",
-        options: [
-          { id: "frosted-triple", name: "Triple-Pane Frosted", desc: "Privacy glass with max insulation." },
-          { id: "clear-double", name: "Double-Pane Clear", desc: "High visibility tempered glass." },
-          { id: "no-glass", name: "Solid Wood (No Glass)", desc: "Full solid panel construction." }
-        ],
-        selected: "frosted-triple"
-      },
-      {
-        id: "finish",
-        name: "Exterior Finish",
-        type: "select",
-        options: [
-          { id: "walnut-stain", name: "Dark Walnut Stain", desc: "Protective UV clear coat varnish." },
-          { id: "matte-black", name: "Matte Black Powdercoat", desc: "Durable architectural paint coating." }
-        ],
-        selected: "walnut-stain"
-      },
-      {
-        id: "hardware",
-        name: "Hardware & Accessories",
-        type: "checkbox",
-        options: [
-          { id: "smart-lock", name: "Keyless Smart Lock", desc: "Fingerprint & keypad entry deadbolt.", active: true },
-          { id: "pull-handle-60in", name: "60-inch Vertical Pull Bar", desc: "Brushed stainless steel handle.", active: true }
+        subfeatures: [
+          { id: "sub-oak", name: "Solid Natural Oak", desc: "Heavyweight hardwood core frame", active: true },
+          { id: "sub-aluminum", name: "Thermal Break Aluminum", desc: "Insulated aluminum frame", active: false }
         ]
-      }
-    ]
-  },
-  {
-    id: "door-002",
-    name: "Sliding Patio Glass System",
-    line: "VistaView Series",
-    creator: "Samantha Chen",
-    lastEditor: "Alex Rivera",
-    lastModified: "2026-10-11",
-    categories: [
-      {
-        id: "frame",
-        name: "Frame Material & Core",
-        type: "select",
-        options: [
-          { id: "aluminum-thermal", name: "Thermal Break Aluminum", desc: "Slim profile aluminum frame." },
-          { id: "vinyl-composite", name: "Vinyl Composite Frame", desc: "Weatherproof UV-stabilized frame." }
-        ],
-        selected: "aluminum-thermal"
       },
       {
-        id: "glass",
-        name: "Glass Panel Options",
-        type: "select",
-        options: [
-          { id: "low-e-double", name: "Low-E Argon Double Pane", desc: "Energy efficient solar heat gain glass." },
-          { id: "tinted-privacy", name: "Bronze Tinted Privacy Glass", desc: "Reduced glare and interior visibility." }
-        ],
-        selected: "low-e-double"
+        id: "feat-glass",
+        name: "Glazing & Glass Specs",
+        subfeatures: [
+          { id: "sub-frosted", name: "Triple-Pane Frosted Glass", desc: "Max privacy & high thermal performance", active: true },
+          { id: "sub-lowe", name: "Low-E Argon Double Pane", desc: "Solar heat gain reduction glass", active: false }
+        ]
       },
       {
-        id: "hardware",
-        name: "Hardware & Accessories",
-        type: "checkbox",
-        options: [
-          { id: "flush-latch", name: "Flush Interior Mortise Lock", desc: "Sleek low-profile locking mechanism.", active: true },
-          { id: "retractable-screen", name: "Integrated Retractable Screen", desc: "Concealed insect mesh screen.", active: true }
+        id: "feat-hardware",
+        name: "Locking & Hardware",
+        subfeatures: [
+          { id: "sub-smartlock", name: "Keyless Smart Deadbolt", desc: "Fingerprint & keypad entry", active: true },
+          { id: "sub-barhandle", name: "60-inch Vertical Pull Bar", desc: "Brushed stainless steel handle", active: true },
+          { id: "sub-multipoint", name: "Multi-Point Security Latch", desc: "3-point perimeter locking", active: true }
         ]
       }
     ]
@@ -106,24 +51,12 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function loadDoorList() {
-  const saved = localStorage.getItem("door_meta_list");
+  const saved = localStorage.getItem("door_meta_list_v2");
   return saved ? JSON.parse(saved) : initialDoorMetaList;
 }
 
 function saveDoorList() {
-  localStorage.setItem("door_meta_list", JSON.stringify(doorList));
-}
-
-function countActiveSpecs(door) {
-  let count = 0;
-  door.categories.forEach(cat => {
-    if (cat.type === "checkbox") {
-      count += cat.options.filter(o => o.active).length;
-    } else if (cat.selected && cat.selected !== "no-glass") {
-      count += 1;
-    }
-  });
-  return count;
+  localStorage.setItem("door_meta_list_v2", JSON.stringify(doorList));
 }
 
 function renderTable() {
@@ -138,7 +71,7 @@ function renderTable() {
       <td>${door.creator}</td>
       <td>${door.lastEditor}</td>
       <td>${door.lastModified}</td>
-      <td>${countActiveSpecs(door)} specs active</td>
+      <td>${door.features ? door.features.length : 0} Features</td>
       <td class="action-cell">
         <button class="btn btn-primary btn-sm" onclick="openConfigurator('${door.id}')">Configure Door</button>
         <button class="btn btn-secondary btn-sm" onclick="openEditModal('${door.id}')">Edit Info</button>
@@ -161,7 +94,7 @@ function openConfigurator(doorId) {
   document.getElementById("header-title").innerText = `Configurator: ${door.name}`;
 
   updateConfiguratorSummary(door);
-  renderSidebarControls(door);
+  renderSidebarFeatures(door);
   renderCanvas(door);
 }
 
@@ -181,66 +114,61 @@ function updateConfiguratorSummary(door) {
   document.getElementById("summary-creator").innerText = door.creator;
   document.getElementById("summary-editor").innerText = door.lastEditor;
   document.getElementById("summary-date").innerText = door.lastModified;
-  document.getElementById("summary-count").innerText = countActiveSpecs(door);
+  document.getElementById("summary-count").innerText = door.features ? door.features.length : 0;
 }
 
-function renderSidebarControls(door) {
+function renderSidebarFeatures(door) {
   const container = document.getElementById("controls-container");
   container.innerHTML = "";
 
-  door.categories.forEach(cat => {
-    const group = document.createElement("div");
-    group.className = "control-group";
+  if (!door.features || door.features.length === 0) {
+    container.innerHTML = `<p style="color: #6c757d; font-size: 0.85rem;">No features added yet. Click <strong>+ Add Top Feature</strong> above to start.</p>`;
+    return;
+  }
 
-    const label = document.createElement("label");
-    label.className = "group-label";
-    label.innerText = cat.name;
-    group.appendChild(label);
+  door.features.forEach(feat => {
+    const card = document.createElement("div");
+    card.className = "feature-card";
 
-    if (cat.type === "checkbox") {
-      const list = document.createElement("div");
-      list.className = "checkbox-list";
+    const header = document.createElement("div");
+    header.className = "feature-header";
+    header.innerHTML = `
+      <span class="feature-title">${feat.name}</span>
+      <button class="btn btn-secondary btn-sm" onclick="promptAddSubFeature('${feat.id}')">+ Add Choice</button>
+    `;
+    card.appendChild(header);
 
-      cat.options.forEach(opt => {
-        const item = document.createElement("label");
-        item.className = "checkbox-item";
+    const subList = document.createElement("div");
+    subList.className = "subfeature-list";
+
+    if (feat.subfeatures && feat.subfeatures.length > 0) {
+      feat.subfeatures.forEach(sub => {
+        const item = document.createElement("div");
+        item.className = "subfeature-item";
         item.innerHTML = `
-          <input type="checkbox" ${opt.active ? "checked" : ""} data-cat="${cat.id}" data-opt="${opt.id}">
-          <span>${opt.name}</span>
+          <div class="subfeature-left">
+            <input type="checkbox" ${sub.active ? "checked" : ""} id="check-${sub.id}">
+            <label for="check-${sub.id}" style="cursor:pointer;">${sub.name}</label>
+          </div>
+          <button class="btn-link" onclick="deleteSubFeature('${feat.id}', '${sub.id}')">&times;</button>
         `;
+
         item.querySelector("input").addEventListener("change", (e) => {
-          opt.active = e.target.checked;
+          sub.active = e.target.checked;
           door.lastEditor = "Alex Rivera";
           door.lastModified = new Date().toISOString().split("T")[0];
           saveDoorList();
-          updateConfiguratorSummary(door);
           renderCanvas(door);
         });
-        list.appendChild(item);
-      });
-      group.appendChild(list);
-    } else {
-      const select = document.createElement("select");
-      cat.options.forEach(opt => {
-        const option = document.createElement("option");
-        option.value = opt.id;
-        option.innerText = opt.name;
-        if (opt.id === cat.selected) option.selected = true;
-        select.appendChild(option);
-      });
 
-      select.addEventListener("change", (e) => {
-        cat.selected = e.target.value;
-        door.lastEditor = "Alex Rivera";
-        door.lastModified = new Date().toISOString().split("T")[0];
-        saveDoorList();
-        updateConfiguratorSummary(door);
-        renderCanvas(door);
+        subList.appendChild(item);
       });
-      group.appendChild(select);
+    } else {
+      subList.innerHTML = `<span style="font-size:0.75rem; color:#adb5bd;">No choices under this feature.</span>`;
     }
 
-    container.appendChild(group);
+    card.appendChild(subList);
+    container.appendChild(card);
   });
 }
 
@@ -255,43 +183,52 @@ function renderCanvas(door) {
   root.innerText = door.name;
   canvas.appendChild(root);
 
-  // 2. Node Grid
-  const grid = document.createElement("div");
-  grid.className = "node-grid";
+  // 2. Feature & Subfeature Hierarchy Grid
+  const row = document.createElement("div");
+  row.className = "feature-nodes-row";
 
-  door.categories.forEach(cat => {
-    if (cat.type === "checkbox") {
-      cat.options.filter(o => o.active).forEach(opt => {
-        grid.appendChild(createNodeCard(opt.id, opt.name, opt.desc));
-      });
-    } else {
-      const selectedOpt = cat.options.find(o => o.id === cat.selected);
-      if (selectedOpt && selectedOpt.id !== "no-glass") {
-        grid.appendChild(createNodeCard(selectedOpt.id, selectedOpt.name, selectedOpt.desc));
+  if (door.features) {
+    door.features.forEach(feat => {
+      const activeSubs = feat.subfeatures ? feat.subfeatures.filter(s => s.active) : [];
+      if (activeSubs.length > 0) {
+        const col = document.createElement("div");
+        col.className = "feature-group-column";
+
+        const featNode = document.createElement("div");
+        featNode.className = "node-feature feat-node";
+        featNode.dataset.id = feat.id;
+        featNode.innerText = feat.name;
+        col.appendChild(featNode);
+
+        const subGrid = document.createElement("div");
+        subGrid.className = "node-subgrid";
+
+        activeSubs.forEach(sub => {
+          const card = document.createElement("div");
+          card.className = "node-card sub-card";
+          card.dataset.subid = sub.id;
+          card.innerHTML = `
+            <h4>${sub.name}</h4>
+            <p>${sub.desc || ""}</p>
+          `;
+          subGrid.appendChild(card);
+        });
+
+        col.appendChild(subGrid);
+        row.appendChild(col);
       }
-    }
-  });
+    });
+  }
 
-  canvas.appendChild(grid);
+  canvas.appendChild(row);
   setTimeout(drawConnectors, 50);
-}
-
-function createNodeCard(id, title, description) {
-  const card = document.createElement("div");
-  card.className = "node-card child-node";
-  card.dataset.id = id;
-  card.innerHTML = `
-    <h4>${title}</h4>
-    <p>${description}</p>
-  `;
-  return card;
 }
 
 function drawConnectors() {
   const svg = document.getElementById("svg-connectors");
   const viewport = document.getElementById("viewport");
   const rootNode = document.getElementById("root-node");
-  const childNodes = document.querySelectorAll(".child-node");
+  const featNodes = document.querySelectorAll(".feat-node");
 
   if (!svg || !viewport || !rootNode) return;
 
@@ -303,10 +240,10 @@ function drawConnectors() {
   const startX = rootRect.left + rootRect.width / 2 - viewportRect.left + viewport.scrollLeft;
   const startY = rootRect.bottom - viewportRect.top + viewport.scrollTop;
 
-  childNodes.forEach(child => {
-    const childRect = child.getBoundingClientRect();
-    const endX = childRect.left + childRect.width / 2 - viewportRect.left + viewport.scrollLeft;
-    const endY = childRect.top - viewportRect.top + viewport.scrollTop;
+  featNodes.forEach(feat => {
+    const featRect = feat.getBoundingClientRect();
+    const endX = featRect.left + featRect.width / 2 - viewportRect.left + viewport.scrollLeft;
+    const endY = featRect.top - viewportRect.top + viewport.scrollTop;
 
     const controlY = startY + (endY - startY) / 2;
     const pathD = `M ${startX} ${startY} C ${startX} ${controlY}, ${endX} ${controlY}, ${endX} ${endY}`;
@@ -325,11 +262,13 @@ function drawConnectors() {
 
 function setupEventListeners() {
   const modal = document.getElementById("modal-create");
+  const subModal = document.getElementById("modal-subfeature");
   const btnCreate = document.getElementById("btn-create-meta");
   const btnBack = document.getElementById("btn-back-to-list");
   const btnClose = document.getElementById("btn-close-modal");
   const btnCancel = document.getElementById("btn-cancel-modal");
   const formCreate = document.getElementById("form-create-meta");
+  const btnAddFeature = document.getElementById("btn-add-feature");
 
   btnCreate.addEventListener("click", () => {
     document.getElementById("modal-title").innerText = "Create New Door Model";
@@ -343,6 +282,58 @@ function setupEventListeners() {
   btnClose.addEventListener("click", () => modal.classList.add("hidden"));
   btnCancel.addEventListener("click", () => modal.classList.add("hidden"));
 
+  document.getElementById("btn-close-submodal").addEventListener("click", () => subModal.classList.add("hidden"));
+  document.getElementById("btn-cancel-submodal").addEventListener("click", () => subModal.classList.add("hidden"));
+
+  // Add Top Feature
+  btnAddFeature.addEventListener("click", () => {
+    if (!activeDoorId) return;
+    const name = prompt("Enter New Top-Level Feature Name (e.g. Fire-Rating & Seals):");
+    if (name) {
+      const door = doorList.find(d => d.id === activeDoorId);
+      if (door) {
+        if (!door.features) door.features = [];
+        door.features.push({
+          id: "feat-" + Date.now(),
+          name,
+          subfeatures: []
+        });
+        saveDoorList();
+        updateConfiguratorSummary(door);
+        renderSidebarFeatures(door);
+        renderCanvas(door);
+      }
+    }
+  });
+
+  // Submit Sub-Feature Modal
+  document.getElementById("form-add-subfeature").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const featId = document.getElementById("subfeature-feature-id").value;
+    const name = document.getElementById("input-sub-name").value.trim();
+    const desc = document.getElementById("input-sub-desc").value.trim();
+
+    const door = doorList.find(d => d.id === activeDoorId);
+    if (door && featId) {
+      const feat = door.features.find(f => f.id === featId);
+      if (feat) {
+        if (!feat.subfeatures) feat.subfeatures = [];
+        feat.subfeatures.push({
+          id: "sub-" + Date.now(),
+          name,
+          desc,
+          active: true
+        });
+        saveDoorList();
+        renderSidebarFeatures(door);
+        renderCanvas(door);
+      }
+    }
+
+    subModal.classList.add("hidden");
+    document.getElementById("form-add-subfeature").reset();
+  });
+
   formCreate.addEventListener("submit", (e) => {
     e.preventDefault();
     const id = document.getElementById("input-id").value;
@@ -352,7 +343,6 @@ function setupEventListeners() {
     const today = new Date().toISOString().split("T")[0];
 
     if (id) {
-      // Edit existing door
       const door = doorList.find(d => d.id === id);
       if (door) {
         door.name = name;
@@ -361,7 +351,6 @@ function setupEventListeners() {
         door.lastModified = today;
       }
     } else {
-      // Create new door model
       const newDoor = {
         id: "door-" + Date.now(),
         name,
@@ -369,23 +358,12 @@ function setupEventListeners() {
         creator,
         lastEditor: creator,
         lastModified: today,
-        categories: [
+        features: [
           {
-            id: "frame",
+            id: "feat-frame",
             name: "Frame Material & Core",
-            type: "select",
-            options: [
-              { id: "oak-solid", name: "Solid Natural Oak", desc: "Heavyweight hardwood core frame." },
-              { id: "aluminum-thermal", name: "Thermal Break Aluminum", desc: "Modern insulated aluminum frame." }
-            ],
-            selected: "oak-solid"
-          },
-          {
-            id: "hardware",
-            name: "Hardware & Accessories",
-            type: "checkbox",
-            options: [
-              { id: "smart-lock", name: "Keyless Smart Lock", desc: "Fingerprint & keypad entry deadbolt.", active: true }
+            subfeatures: [
+              { id: "sub-oak", name: "Solid Natural Oak", desc: "Heavyweight hardwood core frame", active: true }
             ]
           }
         ]
@@ -397,6 +375,25 @@ function setupEventListeners() {
     renderTable();
     modal.classList.add("hidden");
   });
+}
+
+function promptAddSubFeature(featId) {
+  document.getElementById("subfeature-feature-id").value = featId;
+  document.getElementById("form-add-subfeature").reset();
+  document.getElementById("modal-subfeature").classList.remove("hidden");
+}
+
+function deleteSubFeature(featId, subId) {
+  const door = doorList.find(d => d.id === activeDoorId);
+  if (!door) return;
+
+  const feat = door.features.find(f => f.id === featId);
+  if (feat) {
+    feat.subfeatures = feat.subfeatures.filter(s => s.id !== subId);
+    saveDoorList();
+    renderSidebarFeatures(door);
+    renderCanvas(door);
+  }
 }
 
 function openEditModal(doorId) {
