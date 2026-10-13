@@ -1,0 +1,29 @@
+// Meta-Product Visualizer Prototype - v0.2
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Meta-Product Visualizer initialized.");
+
+  // Populate Sidebar Controls
+  const controlsContainer = document.getElementById("controls-container");
+  controlsContainer.innerHTML = `
+    <div class="control-group">
+      <label for="product-name">Product Model Name</label>
+      <input type="text" id="product-name" value="Base Model v1" />
+    </div>
+    <div class="control-group" style="margin-top: 1rem;">
+      <label>Select Variants:</label>
+      <div style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+        <label><input type="checkbox" checked /> Structure Node A</label>
+        <label><input type="checkbox" /> Structure Node B</label>
+      </div>
+    </div>
+  `;
+
+  // Populate Canvas Viewport
+  const viewport = document.getElementById("viewport");
+  viewport.innerHTML = `
+    <div class="product-structure-tree">
+      <h3 style="color: #0d6efd; margin-bottom: 0.5rem;">[ Root Meta-Product ]</h3>
+      <p style="color: #6c757d; font-size: 0.9rem;">Interactive structure nodes will render here next.</p>
+    </div>
+  `;
+});
