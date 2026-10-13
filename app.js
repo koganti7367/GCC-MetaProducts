@@ -1,71 +1,36 @@
-// Hierarchical Door Meta-Products Seed Data matching the screenshot structure
+// Hierarchical Door Meta-Products Seed Data
 const initialDoorMetaList = [
   {
     id: "door-001",
-    name: "Koganti's Test POroduct",
+    name: "Architectural Entry Door",
     line: "ProSeries Exterior",
     creator: "Alex Rivera",
     lastEditor: "Jordan Lee",
     lastModified: "2026-10-13",
-    children: [
+    features: [
       {
-        id: "node-1",
-        title: "Feature1",
-        isSelection: true,
-        isRequired: false,
-        children: [
-          {
-            id: "node-1-1",
-            title: "Feature 1.1",
-            isSelection: true,
-            isRequired: true,
-            children: [
-              { id: "node-1-3", title: "FFeature 1.3", isOption: true },
-              { id: "node-1-placeholder", title: "Name this feature", isPlaceholder: true }
-            ]
-          }
+        id: "feat-frame",
+        name: "Frame Material & Core",
+        subfeatures: [
+          { id: "sub-oak", name: "Solid Natural Oak", desc: "Heavyweight hardwood core frame", active: true },
+          { id: "sub-aluminum", name: "Thermal Break Aluminum", desc: "Insulated aluminum frame", active: false }
         ]
       },
       {
-        id: "node-cert",
-        title: "Certification",
-        isSelection: true,
-        isRequired: true,
-        children: [
-          {
-            id: "node-cert-yes",
-            title: "Yes",
-            isSelection: true,
-            children: [
-              {
-                id: "node-cert-energy",
-                title: "Energy Star",
-                isSelection: true,
-                children: [
-                  { id: "node-cert-no", title: "No", isOption: true },
-                  { id: "node-cert-yes2", title: "Yes", isSelection: true, isRequired: true }
-                ]
-              }
-            ]
-          },
-          {
-            id: "node-cert-no-root",
-            title: "No",
-            isSelection: true,
-            children: [
-              { id: "node-cert-placeholder", title: "Name this feature", isPlaceholder: true }
-            ]
-          }
+        id: "feat-glass",
+        name: "Glazing & Glass Specs",
+        subfeatures: [
+          { id: "sub-frosted", name: "Triple-Pane Frosted Glass", desc: "Max privacy & high thermal performance", active: true },
+          { id: "sub-lowe", name: "Low-E Argon Double Pane", desc: "Solar heat gain reduction glass", active: false }
         ]
       },
       {
-        id: "node-door",
-        title: "Door",
-        isSelection: true,
-        children: [
-          { id: "node-inswing", title: "IN swing", isOption: true },
-          { id: "node-outswing", title: "Out swing", isOption: true },
-          { id: "node-colors", title: "red;blue;green;orange;whatever", isOption: true }
+        id: "feat-hardware",
+        name: "Locking & Hardware",
+        subfeatures: [
+          { id: "sub-smartlock", name: "Keyless Smart Deadbolt", desc: "Fingerprint & keypad entry", active: true },
+          { id: "sub-barhandle", name: "60-inch Vertical Pull Bar", desc: "Brushed stainless steel handle", active: true },
+          { id: "sub-multipoint", name: "Multi-Point Security Latch", desc: "3-point perimeter locking", active: true }
         ]
       }
     ]
@@ -79,15 +44,19 @@ let activeDoorId = null;
 document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
   renderTable();
+
+  window.addEventListener("resize", () => {
+    if (activeDoorId) drawConnectors();
+  });
 });
 
 function loadDoorList() {
-  const saved = localStorage.getItem("door_meta_list_v3");
+  const saved = localStorage.getItem("door_meta_list_v2");
   return saved ? JSON.parse(saved) : initialDoorMetaList;
 }
 
 function saveDoorList() {
-  localStorage.setItem("door_meta_list_v3", JSON.stringify(doorList));
+  localStorage.setItem("door_meta_list_v2", JSON.stringify(doorList));
 }
 
 function renderTable() {
@@ -102,7 +71,7 @@ function renderTable() {
       <td>${door.creator}</td>
       <td>${door.lastEditor}</td>
       <td>${door.lastModified}</td>
-      <td>${door.children ? door.children.length : 0} Top Features</td>
+      <td>${door.features ? door.features.length : 0} Features</td>
       <td class="action-cell">
         <button class="btn btn-primary btn-sm" onclick="openConfigurator('${door.id}')">Configure Door</button>
         <button class="btn btn-secondary btn-sm" onclick="openEditModal('${door.id}')">Edit Info</button>
@@ -124,7 +93,9 @@ function openConfigurator(doorId) {
   document.getElementById("btn-create-meta").classList.add("hidden");
   document.getElementById("header-title").innerText = `Configurator: ${door.name}`;
 
-  renderTreeEditor(door);
+  updateConfiguratorSummary(door);
+  renderSidebarFeatures(door);
+  renderCanvas(door);
 }
 
 function backToTable() {
@@ -137,169 +108,167 @@ function backToTable() {
   renderTable();
 }
 
-function renderTreeEditor(door) {
-  const wrapper = document.getElementById("tree-root-wrapper");
-  wrapper.innerHTML = "";
-
-  // 1. Root Header
-  const rootHeader = document.createElement("div");
-  rootHeader.className = "tree-root-header";
-  rootHeader.innerHTML = `
-    <span class="caret-icon">&#9660;</span>
-    <span class="root-icon">&#129691;</span>
-    <span>${door.name}</span>
-    <button class="icon-action-btn" title="Add Feature" onclick="addNode('${door.id}', null)">&#10555;</button>
-  `;
-  wrapper.appendChild(rootHeader);
-
-  // 2. Render Children List
-  const childrenContainer = document.createElement("div");
-  childrenContainer.className = "tree-children";
-
-  if (door.children && door.children.length > 0) {
-    door.children.forEach(child => {
-      childrenContainer.appendChild(renderTreeNode(child, door));
-    });
-  }
-
-  wrapper.appendChild(childrenContainer);
+function updateConfiguratorSummary(door) {
+  document.getElementById("summary-name").innerText = door.name;
+  document.getElementById("summary-line").innerText = door.line || "N/A";
+  document.getElementById("summary-creator").innerText = door.creator;
+  document.getElementById("summary-editor").innerText = door.lastEditor;
+  document.getElementById("summary-date").innerText = door.lastModified;
+  document.getElementById("summary-count").innerText = door.features ? door.features.length : 0;
 }
 
-function renderTreeNode(node, door) {
-  const nodeContainer = document.createElement("div");
-  nodeContainer.className = "tree-node-item";
+function renderSidebarFeatures(door) {
+  const container = document.getElementById("controls-container");
+  container.innerHTML = "";
 
-  const hasChildren = node.children && node.children.length > 0;
+  if (!door.features || door.features.length === 0) {
+    container.innerHTML = `<p style="color: #6c757d; font-size: 0.85rem;">No features added yet. Click <strong>+ Add Top Feature</strong> above to start.</p>`;
+    return;
+  }
 
-  // Row Markup
-  const row = document.createElement("div");
-  row.className = "tree-node-row";
+  door.features.forEach(feat => {
+    const card = document.createElement("div");
+    card.className = "feature-card";
 
-  // Title class check
-  const titleClass = node.isPlaceholder ? "node-title-placeholder" : "node-title-text";
-  const iconType = node.isOption ? "&#11046;" : "&#9776;";
+    const header = document.createElement("div");
+    header.className = "feature-header";
+    header.innerHTML = `
+      <span class="feature-title">${feat.name}</span>
+      <button class="btn btn-secondary btn-sm" onclick="promptAddSubFeature('${feat.id}')">+ Add Choice</button>
+    `;
+    card.appendChild(header);
 
-  row.innerHTML = `
-    <div class="tree-node-left">
-      <span class="drag-handle">::</span>
-      <span class="caret-icon ${hasChildren ? "" : "hidden"}">&#9660;</span>
-      <span class="type-icon">${iconType}</span>
-      <span class="${titleClass}" onclick="renameNodePrompt('${door.id}', '${node.id}')">${node.title}</span>
-    </div>
-    <div class="tree-node-right">
-      ${node.isSelection ? `<span class="badge-tag badge-selection">Selection</span>` : ""}
-      ${node.isRequired ? `<span class="badge-tag badge-required">Required</span>` : ""}
-      <div class="node-actions">
-        <button class="icon-action-btn" title="Add Child Feature" onclick="addNode('${door.id}', '${node.id}')">&#10555;</button>
-        <button class="icon-action-btn" title="Settings">&#9881;</button>
-        <button class="icon-action-btn" title="Link/Reference">&#128279;</button>
-        <button class="icon-action-btn" title="Delete" onclick="deleteNode('${door.id}', '${node.id}')">&times;</button>
-      </div>
-    </div>
-  `;
+    const subList = document.createElement("div");
+    subList.className = "subfeature-list";
 
-  nodeContainer.appendChild(row);
+    if (feat.subfeatures && feat.subfeatures.length > 0) {
+      feat.subfeatures.forEach(sub => {
+        const item = document.createElement("div");
+        item.className = "subfeature-item";
+        item.innerHTML = `
+          <div class="subfeature-left">
+            <input type="checkbox" ${sub.active ? "checked" : ""} id="check-${sub.id}">
+            <label for="check-${sub.id}" style="cursor:pointer;">${sub.name}</label>
+          </div>
+          <button class="btn-link" onclick="deleteSubFeature('${feat.id}', '${sub.id}')">&times;</button>
+        `;
 
-  // Render Children recursively
-  if (hasChildren) {
-    const childWrapper = document.createElement("div");
-    childWrapper.className = "tree-children";
-    node.children.forEach(child => {
-      childWrapper.appendChild(renderTreeNode(child, door));
-    });
-    nodeContainer.appendChild(childWrapper);
+        item.querySelector("input").addEventListener("change", (e) => {
+          sub.active = e.target.checked;
+          door.lastEditor = "Alex Rivera";
+          door.lastModified = new Date().toISOString().split("T")[0];
+          saveDoorList();
+          renderCanvas(door);
+        });
 
-    // Toggle collapse
-    const caret = row.querySelector(".caret-icon");
-    if (caret) {
-      caret.addEventListener("click", () => {
-        caret.classList.toggle("collapsed");
-        childWrapper.classList.toggle("hidden");
+        subList.appendChild(item);
       });
+    } else {
+      subList.innerHTML = `<span style="font-size:0.75rem; color:#adb5bd;">No choices under this feature.</span>`;
     }
-  }
 
-  return nodeContainer;
-}
-
-function findAndOperate(nodes, targetId, callback) {
-  for (let i = 0; i < nodes.length; i++) {
-    if (nodes[i].id === targetId) {
-      callback(nodes, i);
-      return true;
-    }
-    if (nodes[i].children && findAndOperate(nodes[i].children, targetId, callback)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function addNode(doorId, parentNodeId) {
-  const door = doorList.find(d => d.id === doorId);
-  if (!door) return;
-
-  const title = prompt("Enter Feature/Option Name:", "Name this feature");
-  if (!title) return;
-
-  const newNode = {
-    id: "node-" + Date.now(),
-    title: title,
-    isSelection: true,
-    children: []
-  };
-
-  if (!parentNodeId) {
-    if (!door.children) door.children = [];
-    door.children.push(newNode);
-  } else {
-    findAndOperate(door.children, parentNodeId, (arr, idx) => {
-      if (!arr[idx].children) arr[idx].children = [];
-      arr[idx].children.push(newNode);
-    });
-  }
-
-  saveDoorList();
-  renderTreeEditor(door);
-}
-
-function renameNodePrompt(doorId, nodeId) {
-  const door = doorList.find(d => d.id === doorId);
-  if (!door) return;
-
-  findAndOperate(door.children, nodeId, (arr, idx) => {
-    const currentTitle = arr[idx].title;
-    const newTitle = prompt("Rename Feature/Option:", currentTitle);
-    if (newTitle) {
-      arr[idx].title = newTitle;
-      arr[idx].isPlaceholder = false;
-    }
+    card.appendChild(subList);
+    container.appendChild(card);
   });
-
-  saveDoorList();
-  renderTreeEditor(door);
 }
 
-function deleteNode(doorId, nodeId) {
-  const door = doorList.find(d => d.id === doorId);
-  if (!door) return;
+function renderCanvas(door) {
+  const canvas = document.getElementById("tree-canvas");
+  canvas.innerHTML = "";
 
-  if (confirm("Delete this feature and its sub-features?")) {
-    findAndOperate(door.children, nodeId, (arr, idx) => {
-      arr.splice(idx, 1);
+  // 1. Root Node
+  const root = document.createElement("div");
+  root.id = "root-node";
+  root.className = "node-root";
+  root.innerText = door.name;
+  canvas.appendChild(root);
+
+  // 2. Feature & Subfeature Hierarchy Grid
+  const row = document.createElement("div");
+  row.className = "feature-nodes-row";
+
+  if (door.features) {
+    door.features.forEach(feat => {
+      const activeSubs = feat.subfeatures ? feat.subfeatures.filter(s => s.active) : [];
+      if (activeSubs.length > 0) {
+        const col = document.createElement("div");
+        col.className = "feature-group-column";
+
+        const featNode = document.createElement("div");
+        featNode.className = "node-feature feat-node";
+        featNode.dataset.id = feat.id;
+        featNode.innerText = feat.name;
+        col.appendChild(featNode);
+
+        const subGrid = document.createElement("div");
+        subGrid.className = "node-subgrid";
+
+        activeSubs.forEach(sub => {
+          const card = document.createElement("div");
+          card.className = "node-card sub-card";
+          card.dataset.subid = sub.id;
+          card.innerHTML = `
+            <h4>${sub.name}</h4>
+            <p>${sub.desc || ""}</p>
+          `;
+          subGrid.appendChild(card);
+        });
+
+        col.appendChild(subGrid);
+        row.appendChild(col);
+      }
     });
-    saveDoorList();
-    renderTreeEditor(door);
   }
+
+  canvas.appendChild(row);
+  setTimeout(drawConnectors, 50);
+}
+
+function drawConnectors() {
+  const svg = document.getElementById("svg-connectors");
+  const viewport = document.getElementById("viewport");
+  const rootNode = document.getElementById("root-node");
+  const featNodes = document.querySelectorAll(".feat-node");
+
+  if (!svg || !viewport || !rootNode) return;
+
+  svg.innerHTML = "";
+
+  const viewportRect = viewport.getBoundingClientRect();
+  const rootRect = rootNode.getBoundingClientRect();
+
+  const startX = rootRect.left + rootRect.width / 2 - viewportRect.left + viewport.scrollLeft;
+  const startY = rootRect.bottom - viewportRect.top + viewport.scrollTop;
+
+  featNodes.forEach(feat => {
+    const featRect = feat.getBoundingClientRect();
+    const endX = featRect.left + featRect.width / 2 - viewportRect.left + viewport.scrollLeft;
+    const endY = featRect.top - viewportRect.top + viewport.scrollTop;
+
+    const controlY = startY + (endY - startY) / 2;
+    const pathD = `M ${startX} ${startY} C ${startX} ${controlY}, ${endX} ${controlY}, ${endX} ${endY}`;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", pathD);
+    path.setAttribute("stroke", "#0d6efd");
+    path.setAttribute("stroke-width", "2");
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke-dasharray", "4,4");
+    path.setAttribute("opacity", "0.6");
+
+    svg.appendChild(path);
+  });
 }
 
 function setupEventListeners() {
   const modal = document.getElementById("modal-create");
+  const subModal = document.getElementById("modal-subfeature");
   const btnCreate = document.getElementById("btn-create-meta");
   const btnBack = document.getElementById("btn-back-to-list");
   const btnClose = document.getElementById("btn-close-modal");
   const btnCancel = document.getElementById("btn-cancel-modal");
   const formCreate = document.getElementById("form-create-meta");
+  const btnAddFeature = document.getElementById("btn-add-feature");
 
   btnCreate.addEventListener("click", () => {
     document.getElementById("modal-title").innerText = "Create New Door Model";
@@ -312,6 +281,58 @@ function setupEventListeners() {
   btnBack.addEventListener("click", backToTable);
   btnClose.addEventListener("click", () => modal.classList.add("hidden"));
   btnCancel.addEventListener("click", () => modal.classList.add("hidden"));
+
+  document.getElementById("btn-close-submodal").addEventListener("click", () => subModal.classList.add("hidden"));
+  document.getElementById("btn-cancel-submodal").addEventListener("click", () => subModal.classList.add("hidden"));
+
+  // Add Top Feature
+  btnAddFeature.addEventListener("click", () => {
+    if (!activeDoorId) return;
+    const name = prompt("Enter New Top-Level Feature Name (e.g. Fire-Rating & Seals):");
+    if (name) {
+      const door = doorList.find(d => d.id === activeDoorId);
+      if (door) {
+        if (!door.features) door.features = [];
+        door.features.push({
+          id: "feat-" + Date.now(),
+          name,
+          subfeatures: []
+        });
+        saveDoorList();
+        updateConfiguratorSummary(door);
+        renderSidebarFeatures(door);
+        renderCanvas(door);
+      }
+    }
+  });
+
+  // Submit Sub-Feature Modal
+  document.getElementById("form-add-subfeature").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const featId = document.getElementById("subfeature-feature-id").value;
+    const name = document.getElementById("input-sub-name").value.trim();
+    const desc = document.getElementById("input-sub-desc").value.trim();
+
+    const door = doorList.find(d => d.id === activeDoorId);
+    if (door && featId) {
+      const feat = door.features.find(f => f.id === featId);
+      if (feat) {
+        if (!feat.subfeatures) feat.subfeatures = [];
+        feat.subfeatures.push({
+          id: "sub-" + Date.now(),
+          name,
+          desc,
+          active: true
+        });
+        saveDoorList();
+        renderSidebarFeatures(door);
+        renderCanvas(door);
+      }
+    }
+
+    subModal.classList.add("hidden");
+    document.getElementById("form-add-subfeature").reset();
+  });
 
   formCreate.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -337,8 +358,14 @@ function setupEventListeners() {
         creator,
         lastEditor: creator,
         lastModified: today,
-        children: [
-          { id: "node-init", title: "Main Feature", isSelection: true, children: [] }
+        features: [
+          {
+            id: "feat-frame",
+            name: "Frame Material & Core",
+            subfeatures: [
+              { id: "sub-oak", name: "Solid Natural Oak", desc: "Heavyweight hardwood core frame", active: true }
+            ]
+          }
         ]
       };
       doorList.push(newDoor);
@@ -348,6 +375,25 @@ function setupEventListeners() {
     renderTable();
     modal.classList.add("hidden");
   });
+}
+
+function promptAddSubFeature(featId) {
+  document.getElementById("subfeature-feature-id").value = featId;
+  document.getElementById("form-add-subfeature").reset();
+  document.getElementById("modal-subfeature").classList.remove("hidden");
+}
+
+function deleteSubFeature(featId, subId) {
+  const door = doorList.find(d => d.id === activeDoorId);
+  if (!door) return;
+
+  const feat = door.features.find(f => f.id === featId);
+  if (feat) {
+    feat.subfeatures = feat.subfeatures.filter(s => s.id !== subId);
+    saveDoorList();
+    renderSidebarFeatures(door);
+    renderCanvas(door);
+  }
 }
 
 function openEditModal(doorId) {
