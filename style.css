@@ -24,7 +24,11 @@ body {
   overflow: hidden;
 }
 
-/* Header & Navigation */
+.hidden {
+  display: none !important;
+}
+
+/* Header */
 .app-header {
   background-color: var(--surface-color);
   border-bottom: 1px solid var(--border-color);
@@ -54,7 +58,70 @@ body {
   font-weight: 600;
 }
 
-/* Meta Summary Bar */
+.header-right {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* View Sections */
+.view-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Table Manager Styling */
+.table-container {
+  padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.meta-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+}
+
+.meta-table th {
+  background-color: #f1f3f5;
+  text-align: left;
+  padding: 0.85rem 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6c757d;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.meta-table td {
+  padding: 1rem;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--border-color);
+  color: #343a40;
+}
+
+.meta-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.table-title {
+  font-weight: 600;
+  color: #212529;
+}
+
+.action-cell {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Summary Bar */
 .meta-summary-bar {
   background-color: #ffffff;
   border-bottom: 1px solid var(--border-color);
@@ -83,10 +150,6 @@ body {
   font-size: 0.9rem;
   font-weight: 600;
   color: #212529;
-}
-
-.summary-action {
-  margin-left: auto;
 }
 
 /* Layout Container */
@@ -150,7 +213,7 @@ body {
   cursor: pointer;
 }
 
-/* Canvas Area & Connectors */
+/* Canvas Area */
 .canvas-area {
   flex: 1;
   padding: 2rem;
@@ -217,7 +280,7 @@ body {
   border-top: 4px solid #0d6efd;
   border-radius: 6px;
   padding: 1rem;
-  width: 190px;
+  width: 200px;
   text-align: left;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
@@ -234,7 +297,7 @@ body {
   line-height: 1.3;
 }
 
-/* Buttons & UI Controls */
+/* Buttons */
 .btn {
   padding: 0.5rem 1rem;
   border-radius: 4px;
@@ -263,12 +326,21 @@ body {
   background-color: #dee2e6;
 }
 
+.btn-danger {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background-color: #bb2d3b;
+}
+
 .btn-sm {
   padding: 0.35rem 0.65rem;
   font-size: 0.775rem;
 }
 
-/* Modal Overlay & Card */
+/* Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -280,10 +352,6 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 100;
-}
-
-.modal-overlay.hidden {
-  display: none;
 }
 
 .modal-card {

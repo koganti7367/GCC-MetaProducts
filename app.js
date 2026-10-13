@@ -1,92 +1,194 @@
-// Default Meta-Product Schema
-const defaultMetaProduct = {
-  id: "meta-001",
-  name: "Smart Watch Platform",
-  line: "Wearables Series X",
-  creator: "Alex Rivera",
-  lastEditor: "Jordan Lee",
-  lastModified: "2026-10-13",
-  categories: [
-    {
-      id: "chassis",
-      name: "Case Material & Size",
-      type: "select",
-      options: [
-        { id: "aluminum-41", name: "Aluminum 41mm", desc: "Lightweight aerospace grade aluminum." },
-        { id: "titanium-45", name: "Titanium 45mm", desc: "Rugged finish with high durability." },
-        { id: "ceramic-45", name: "Ceramic Edition 45mm", desc: "Premium polished finish." }
-      ],
-      selected: "aluminum-41"
-    },
-    {
-      id: "display",
-      name: "Display Glass",
-      type: "select",
-      options: [
-        { id: "oled", name: "Ion-X Glass OLED", desc: "Standard high brightness OLED panel." },
-        { id: "sapphire", name: "Sapphire Crystal OLED", desc: "Ultra scratch-resistant sapphire layer." }
-      ],
-      selected: "oled"
-    },
-    {
-      id: "modules",
-      name: "Internal Modules",
-      type: "checkbox",
-      options: [
-        { id: "gps", name: "GPS Module", desc: "Dual-frequency satellite positioning.", active: true },
-        { id: "lte", name: "Cellular LTE", desc: "Standalone connectivity without phone.", active: false },
-        { id: "ecg", name: "ECG Sensor", desc: "Electrical heart rate sensor.", active: true },
-        { id: "sp02", name: "Blood Oxygen Sensor", desc: "Optical pulse oximeter module.", active: false }
-      ]
-    }
-  ]
-};
+// Seed Data for Door Meta-Products
+const initialDoorMetaList = [
+  {
+    id: "door-001",
+    name: "Architectural Entry Door",
+    line: "ProSeries Exterior",
+    creator: "Alex Rivera",
+    lastEditor: "Jordan Lee",
+    lastModified: "2026-10-13",
+    categories: [
+      {
+        id: "frame",
+        name: "Frame Material & Core",
+        type: "select",
+        options: [
+          { id: "oak-solid", name: "Solid Natural Oak", desc: "Heavyweight hardwood core frame." },
+          { id: "aluminum-thermal", name: "Thermal Break Aluminum", desc: "Modern insulated aluminum frame." },
+          { id: "fiberglass", name: "Composite Fiberglass", desc: "High weather-resistance core." }
+        ],
+        selected: "oak-solid"
+      },
+      {
+        id: "glass",
+        name: "Glass Panel Options",
+        type: "select",
+        options: [
+          { id: "frosted-triple", name: "Triple-Pane Frosted", desc: "Privacy glass with max insulation." },
+          { id: "clear-double", name: "Double-Pane Clear", desc: "High visibility tempered glass." },
+          { id: "no-glass", name: "Solid Wood (No Glass)", desc: "Full solid panel construction." }
+        ],
+        selected: "frosted-triple"
+      },
+      {
+        id: "finish",
+        name: "Exterior Finish",
+        type: "select",
+        options: [
+          { id: "walnut-stain", name: "Dark Walnut Stain", desc: "Protective UV clear coat varnish." },
+          { id: "matte-black", name: "Matte Black Powdercoat", desc: "Durable architectural paint coating." }
+        ],
+        selected: "walnut-stain"
+      },
+      {
+        id: "hardware",
+        name: "Hardware & Accessories",
+        type: "checkbox",
+        options: [
+          { id: "smart-lock", name: "Keyless Smart Lock", desc: "Fingerprint & keypad entry deadbolt.", active: true },
+          { id: "pull-handle-60in", name: "60-inch Vertical Pull Bar", desc: "Brushed stainless steel handle.", active: true }
+        ]
+      }
+    ]
+  },
+  {
+    id: "door-002",
+    name: "Sliding Patio Glass System",
+    line: "VistaView Series",
+    creator: "Samantha Chen",
+    lastEditor: "Alex Rivera",
+    lastModified: "2026-10-11",
+    categories: [
+      {
+        id: "frame",
+        name: "Frame Material & Core",
+        type: "select",
+        options: [
+          { id: "aluminum-thermal", name: "Thermal Break Aluminum", desc: "Slim profile aluminum frame." },
+          { id: "vinyl-composite", name: "Vinyl Composite Frame", desc: "Weatherproof UV-stabilized frame." }
+        ],
+        selected: "aluminum-thermal"
+      },
+      {
+        id: "glass",
+        name: "Glass Panel Options",
+        type: "select",
+        options: [
+          { id: "low-e-double", name: "Low-E Argon Double Pane", desc: "Energy efficient solar heat gain glass." },
+          { id: "tinted-privacy", name: "Bronze Tinted Privacy Glass", desc: "Reduced glare and interior visibility." }
+        ],
+        selected: "low-e-double"
+      },
+      {
+        id: "hardware",
+        name: "Hardware & Accessories",
+        type: "checkbox",
+        options: [
+          { id: "flush-latch", name: "Flush Interior Mortise Lock", desc: "Sleek low-profile locking mechanism.", active: true },
+          { id: "retractable-screen", name: "Integrated Retractable Screen", desc: "Concealed insect mesh screen.", active: true }
+        ]
+      }
+    ]
+  }
+];
 
-// Active State
-let currentMeta = loadSavedMeta() || defaultMetaProduct;
+// App State
+let doorList = loadDoorList();
+let activeDoorId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
-  updateSummaryBar();
-  renderSidebar();
-  renderCanvas();
+  renderTable();
 
-  window.addEventListener("resize", drawConnectors);
+  window.addEventListener("resize", () => {
+    if (activeDoorId) drawConnectors();
+  });
 });
 
-function loadSavedMeta() {
-  const saved = localStorage.getItem("active_meta_product");
-  return saved ? JSON.parse(saved) : null;
+function loadDoorList() {
+  const saved = localStorage.getItem("door_meta_list");
+  return saved ? JSON.parse(saved) : initialDoorMetaList;
 }
 
-function saveMetaState() {
-  localStorage.setItem("active_meta_product", JSON.stringify(currentMeta));
+function saveDoorList() {
+  localStorage.setItem("door_meta_list", JSON.stringify(doorList));
 }
 
-function updateSummaryBar() {
-  document.getElementById("meta-name").innerText = currentMeta.name;
-  document.getElementById("meta-line").innerText = currentMeta.line || "N/A";
-  document.getElementById("meta-creator").innerText = currentMeta.creator;
-  document.getElementById("meta-editor").innerText = currentMeta.lastEditor;
-  document.getElementById("meta-date").innerText = currentMeta.lastModified;
-
-  // Calculate active node count
+function countActiveSpecs(door) {
   let count = 0;
-  currentMeta.categories.forEach(cat => {
+  door.categories.forEach(cat => {
     if (cat.type === "checkbox") {
       count += cat.options.filter(o => o.active).length;
-    } else if (cat.selected) {
+    } else if (cat.selected && cat.selected !== "no-glass") {
       count += 1;
     }
   });
-  document.getElementById("meta-count").innerText = count;
+  return count;
 }
 
-function renderSidebar() {
+function renderTable() {
+  const tbody = document.getElementById("table-body");
+  tbody.innerHTML = "";
+
+  doorList.forEach(door => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="table-title">${door.name}</td>
+      <td>${door.line || "N/A"}</td>
+      <td>${door.creator}</td>
+      <td>${door.lastEditor}</td>
+      <td>${door.lastModified}</td>
+      <td>${countActiveSpecs(door)} specs active</td>
+      <td class="action-cell">
+        <button class="btn btn-primary btn-sm" onclick="openConfigurator('${door.id}')">Configure Door</button>
+        <button class="btn btn-secondary btn-sm" onclick="openEditModal('${door.id}')">Edit Info</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDoor('${door.id}')">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function openConfigurator(doorId) {
+  activeDoorId = doorId;
+  const door = doorList.find(d => d.id === doorId);
+  if (!door) return;
+
+  document.getElementById("view-table").classList.add("hidden");
+  document.getElementById("view-configurator").classList.remove("hidden");
+  document.getElementById("btn-back-to-list").classList.remove("hidden");
+  document.getElementById("btn-create-meta").classList.add("hidden");
+  document.getElementById("header-title").innerText = `Configurator: ${door.name}`;
+
+  updateConfiguratorSummary(door);
+  renderSidebarControls(door);
+  renderCanvas(door);
+}
+
+function backToTable() {
+  activeDoorId = null;
+  document.getElementById("view-configurator").classList.add("hidden");
+  document.getElementById("view-table").classList.remove("hidden");
+  document.getElementById("btn-back-to-list").classList.add("hidden");
+  document.getElementById("btn-create-meta").classList.remove("hidden");
+  document.getElementById("header-title").innerText = "Door Meta-Product Manager";
+  renderTable();
+}
+
+function updateConfiguratorSummary(door) {
+  document.getElementById("summary-name").innerText = door.name;
+  document.getElementById("summary-line").innerText = door.line || "N/A";
+  document.getElementById("summary-creator").innerText = door.creator;
+  document.getElementById("summary-editor").innerText = door.lastEditor;
+  document.getElementById("summary-date").innerText = door.lastModified;
+  document.getElementById("summary-count").innerText = countActiveSpecs(door);
+}
+
+function renderSidebarControls(door) {
   const container = document.getElementById("controls-container");
   container.innerHTML = "";
 
-  currentMeta.categories.forEach(cat => {
+  door.categories.forEach(cat => {
     const group = document.createElement("div");
     group.className = "control-group";
 
@@ -108,11 +210,11 @@ function renderSidebar() {
         `;
         item.querySelector("input").addEventListener("change", (e) => {
           opt.active = e.target.checked;
-          currentMeta.lastEditor = "Alex Rivera";
-          currentMeta.lastModified = new Date().toISOString().split("T")[0];
-          saveMetaState();
-          updateSummaryBar();
-          renderCanvas();
+          door.lastEditor = "Alex Rivera";
+          door.lastModified = new Date().toISOString().split("T")[0];
+          saveDoorList();
+          updateConfiguratorSummary(door);
+          renderCanvas(door);
         });
         list.appendChild(item);
       });
@@ -129,11 +231,11 @@ function renderSidebar() {
 
       select.addEventListener("change", (e) => {
         cat.selected = e.target.value;
-        currentMeta.lastEditor = "Alex Rivera";
-        currentMeta.lastModified = new Date().toISOString().split("T")[0];
-        saveMetaState();
-        updateSummaryBar();
-        renderCanvas();
+        door.lastEditor = "Alex Rivera";
+        door.lastModified = new Date().toISOString().split("T")[0];
+        saveDoorList();
+        updateConfiguratorSummary(door);
+        renderCanvas(door);
       });
       group.appendChild(select);
     }
@@ -142,7 +244,7 @@ function renderSidebar() {
   });
 }
 
-function renderCanvas() {
+function renderCanvas(door) {
   const canvas = document.getElementById("tree-canvas");
   canvas.innerHTML = "";
 
@@ -150,21 +252,21 @@ function renderCanvas() {
   const root = document.createElement("div");
   root.id = "root-node";
   root.className = "node-root";
-  root.innerText = currentMeta.name;
+  root.innerText = door.name;
   canvas.appendChild(root);
 
-  // 2. Component Grid
+  // 2. Node Grid
   const grid = document.createElement("div");
   grid.className = "node-grid";
 
-  currentMeta.categories.forEach(cat => {
+  door.categories.forEach(cat => {
     if (cat.type === "checkbox") {
       cat.options.filter(o => o.active).forEach(opt => {
         grid.appendChild(createNodeCard(opt.id, opt.name, opt.desc));
       });
     } else {
       const selectedOpt = cat.options.find(o => o.id === cat.selected);
-      if (selectedOpt) {
+      if (selectedOpt && selectedOpt.id !== "no-glass") {
         grid.appendChild(createNodeCard(selectedOpt.id, selectedOpt.name, selectedOpt.desc));
       }
     }
@@ -224,40 +326,96 @@ function drawConnectors() {
 function setupEventListeners() {
   const modal = document.getElementById("modal-create");
   const btnCreate = document.getElementById("btn-create-meta");
+  const btnBack = document.getElementById("btn-back-to-list");
   const btnClose = document.getElementById("btn-close-modal");
   const btnCancel = document.getElementById("btn-cancel-modal");
   const formCreate = document.getElementById("form-create-meta");
-  const btnEditDetails = document.getElementById("btn-edit-details");
 
-  btnCreate.addEventListener("click", () => modal.classList.remove("hidden"));
-  btnClose.addEventListener("click", () => modal.classList.add("hidden"));
-  btnCancel.addEventListener("click", () => modal.classList.add("hidden"));
-
-  btnEditDetails.addEventListener("click", () => {
-    document.getElementById("input-name").value = currentMeta.name;
-    document.getElementById("input-line").value = currentMeta.line || "";
-    document.getElementById("input-creator").value = currentMeta.creator;
+  btnCreate.addEventListener("click", () => {
+    document.getElementById("modal-title").innerText = "Create New Door Model";
+    document.getElementById("input-id").value = "";
+    formCreate.reset();
+    document.getElementById("input-creator").value = "Alex Rivera";
     modal.classList.remove("hidden");
   });
 
+  btnBack.addEventListener("click", backToTable);
+  btnClose.addEventListener("click", () => modal.classList.add("hidden"));
+  btnCancel.addEventListener("click", () => modal.classList.add("hidden"));
+
   formCreate.addEventListener("submit", (e) => {
     e.preventDefault();
+    const id = document.getElementById("input-id").value;
     const name = document.getElementById("input-name").value.trim();
     const line = document.getElementById("input-line").value.trim();
-    const creator = document.getElementById("input-creator").value.trim() || "Anonymous";
+    const creator = document.getElementById("input-creator").value.trim() || "Alex Rivera";
+    const today = new Date().toISOString().split("T")[0];
 
-    currentMeta.name = name;
-    currentMeta.line = line;
-    currentMeta.creator = creator;
-    currentMeta.lastEditor = creator;
-    currentMeta.lastModified = new Date().toISOString().split("T")[0];
+    if (id) {
+      // Edit existing door
+      const door = doorList.find(d => d.id === id);
+      if (door) {
+        door.name = name;
+        door.line = line;
+        door.lastEditor = creator;
+        door.lastModified = today;
+      }
+    } else {
+      // Create new door model
+      const newDoor = {
+        id: "door-" + Date.now(),
+        name,
+        line,
+        creator,
+        lastEditor: creator,
+        lastModified: today,
+        categories: [
+          {
+            id: "frame",
+            name: "Frame Material & Core",
+            type: "select",
+            options: [
+              { id: "oak-solid", name: "Solid Natural Oak", desc: "Heavyweight hardwood core frame." },
+              { id: "aluminum-thermal", name: "Thermal Break Aluminum", desc: "Modern insulated aluminum frame." }
+            ],
+            selected: "oak-solid"
+          },
+          {
+            id: "hardware",
+            name: "Hardware & Accessories",
+            type: "checkbox",
+            options: [
+              { id: "smart-lock", name: "Keyless Smart Lock", desc: "Fingerprint & keypad entry deadbolt.", active: true }
+            ]
+          }
+        ]
+      };
+      doorList.push(newDoor);
+    }
 
-    saveMetaState();
-    updateSummaryBar();
-    renderSidebar();
-    renderCanvas();
-
+    saveDoorList();
+    renderTable();
     modal.classList.add("hidden");
-    formCreate.reset();
   });
+}
+
+function openEditModal(doorId) {
+  const door = doorList.find(d => d.id === doorId);
+  if (!door) return;
+
+  document.getElementById("modal-title").innerText = "Edit Door Details";
+  document.getElementById("input-id").value = door.id;
+  document.getElementById("input-name").value = door.name;
+  document.getElementById("input-line").value = door.line || "";
+  document.getElementById("input-creator").value = door.lastEditor;
+
+  document.getElementById("modal-create").classList.remove("hidden");
+}
+
+function deleteDoor(doorId) {
+  if (confirm("Are you sure you want to delete this door model?")) {
+    doorList = doorList.filter(d => d.id !== doorId);
+    saveDoorList();
+    renderTable();
+  }
 }
