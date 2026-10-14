@@ -1,418 +1,389 @@
-// Hierarchical Door Meta-Products Seed Data
-const initialDoorMetaList = [
-  {
-    id: "door-001",
-    name: "Architectural Entry Door",
-    line: "ProSeries Exterior",
-    creator: "Alex Rivera",
-    lastEditor: "Jordan Lee",
-    lastModified: "2026-10-13",
-    features: [
-      {
-        id: "feat-frame",
-        name: "Frame Material & Core",
-        subfeatures: [
-          { id: "sub-oak", name: "Solid Natural Oak", desc: "Heavyweight hardwood core frame", active: true },
-          { id: "sub-aluminum", name: "Thermal Break Aluminum", desc: "Insulated aluminum frame", active: false }
-        ]
-      },
-      {
-        id: "feat-glass",
-        name: "Glazing & Glass Specs",
-        subfeatures: [
-          { id: "sub-frosted", name: "Triple-Pane Frosted Glass", desc: "Max privacy & high thermal performance", active: true },
-          { id: "sub-lowe", name: "Low-E Argon Double Pane", desc: "Solar heat gain reduction glass", active: false }
-        ]
-      },
-      {
-        id: "feat-hardware",
-        name: "Locking & Hardware",
-        subfeatures: [
-          { id: "sub-smartlock", name: "Keyless Smart Deadbolt", desc: "Fingerprint & keypad entry", active: true },
-          { id: "sub-barhandle", name: "60-inch Vertical Pull Bar", desc: "Brushed stainless steel handle", active: true },
-          { id: "sub-multipoint", name: "Multi-Point Security Latch", desc: "3-point perimeter locking", active: true }
-        ]
-      }
-    ]
-  }
-];
+// Entry Door Meta-Product Data Store
+const state = {
+  activeView: 'features',
+  selectedFeatureId: null,
+  features: [
+    {
+      id: 'f1',
+      name: 'Door Slab',
+      type: 'category',
+      required: true,
+      children: [
+        { id: 'f1-1', name: 'Material', type: 'choice', required: true, children: [
+          { id: 'f1-1-1', name: 'Fiberglass', type: 'choice' },
+          { id: 'f1-1-2', name: 'Steel', type: 'choice' },
+          { id: 'f1-1-3', name: 'Solid Oak', type: 'choice' }
+        ]},
+        { id: 'f1-2', name: 'Slab Style', type: 'choice', required: true, children: [
+          { id: 'f1-2-1', name: 'Flush Panel', type: 'choice' },
+          { id: 'f1-2-2', name: '6-Panel Traditional', type: 'choice' },
+          { id: 'f1-2-3', name: 'Craftsman 3-Panel', type: 'choice' }
+        ]}
+      ]
+    },
+    {
+      id: 'f2',
+      name: 'Glazing & Glass Options',
+      type: 'category',
+      required: false,
+      children: [
+        { id: 'f2-1', name: 'Glass Style', type: 'choice', children: [
+          { id: 'f2-1-1', name: 'Clear Insulated', type: 'choice' },
+          { id: 'f2-1-2', name: 'Frosted Privacy', type: 'choice' },
+          { id: 'f2-1-3', name: 'Decorative Stained', type: 'choice' }
+        ]},
+        { id: 'f2-2', name: 'Impact Resistance Rating', type: 'choice', children: [
+          { id: 'f2-2-1', name: 'Standard Non-Impact', type: 'choice' },
+          { id: 'f2-2-2', name: 'HVHZ Coastal Impact Rated', type: 'choice' }
+        ]}
+      ]
+    },
+    {
+      id: 'f3',
+      name: 'Hardware & Locksets',
+      type: 'category',
+      required: true,
+      children: [
+        { id: 'f3-1', name: 'Finish', type: 'choice', children: [
+          { id: 'f3-1-1', name: 'Matte Black', type: 'choice' },
+          { id: 'f3-1-2', name: 'Satin Nickel', type: 'choice' },
+          { id: 'f3-1-3', name: 'Oil Rubbed Bronze', type: 'choice' }
+        ]}
+      ]
+    }
+  ],
+  constraints: [
+    {
+      id: 'c1',
+      name: 'Coastal Impact Frame Requirement',
+      type: 'rule',
+      affectedFeatures: ['HVHZ Coastal Impact Rated', 'Material'],
+      logic: 'IF Glazing == "HVHZ Coastal Impact Rated" THEN Material CANNOT BE "Solid Oak"'
+    },
+    {
+      id: 'c2',
+      name: 'Craftsman Hardware Finish Whitelist',
+      type: 'whitelist',
+      affectedFeatures: ['Craftsman 3-Panel', 'Finish'],
+      logic: 'Craftsman 3-Panel ALLOWS ONLY ["Matte Black", "Oil Rubbed Bronze"]'
+    }
+  ]
+};
 
-// App State
-let doorList = loadDoorList();
-let activeDoorId = null;
-
-document.addEventListener("DOMContentLoaded", () => {
-  setupEventListeners();
-  renderTable();
-
-  window.addEventListener("resize", () => {
-    if (activeDoorId) drawConnectors();
-  });
+// Initialize Application
+document.addEventListener('DOMContentLoaded', () => {
+  initLucideIcons();
+  setupNavigation();
+  renderFeatureTree();
+  renderConstraintsTable();
+  setupDrawerEvents();
+  setupBulkModal();
+  setupTestingEngine();
+  updateExportCode();
 });
 
-function loadDoorList() {
-  const saved = localStorage.getItem("door_meta_list_v2");
-  return saved ? JSON.parse(saved) : initialDoorMetaList;
+function initLucideIcons() {
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
 }
 
-function saveDoorList() {
-  localStorage.setItem("door_meta_list_v2", JSON.stringify(doorList));
+// Navigation Handler
+function setupNavigation() {
+  const navButtons = document.querySelectorAll('.nav-btn');
+  navButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetView = btn.getAttribute('data-view');
+      navButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      document.querySelectorAll('.view-panel').forEach(panel => {
+        panel.classList.remove('active');
+      });
+
+      const activePanel = document.getElementById(`view-${targetView}`);
+      if (activePanel) activePanel.classList.add('active');
+
+      const viewTitle = btn.querySelector('span').textContent;
+      document.getElementById('current-view-title').textContent = viewTitle;
+    });
+  });
 }
 
-function renderTable() {
-  const tbody = document.getElementById("table-body");
-  tbody.innerHTML = "";
+// Render Feature Tree
+function renderFeatureTree() {
+  const container = document.getElementById('feature-tree');
+  container.innerHTML = '';
 
-  doorList.forEach(door => {
-    const tr = document.createElement("tr");
+  function createNodeElement(node, isRoot = false) {
+    const wrapper = document.createElement('div');
+    wrapper.className = `tree-node ${isRoot ? 'root-node' : ''}`;
+
+    const content = document.createElement('div');
+    content.className = 'tree-node-content';
+
+    const countRef = getConstraintRefCount(node.name);
+
+    content.innerHTML = `
+      <i data-lucide="${node.children ? 'folder' : 'file-text'}" class="icon-sm"></i>
+      <span class="tree-node-title">${node.name}</span>
+      <span class="tree-tag">${node.type || 'choice'}</span>
+      ${countRef > 0 ? `<span class="constraint-count-badge">${countRef} constraint(s)</span>` : ''}
+      <button class="btn-icon edit-feature-btn" data-id="${node.id}">
+        <i data-lucide="edit-2"></i>
+      </button>
+    `;
+
+    wrapper.appendChild(content);
+
+    if (node.children && node.children.length > 0) {
+      const childrenContainer = document.createElement('div');
+      childrenContainer.className = 'tree-children';
+      node.children.forEach(child => {
+        childrenContainer.appendChild(createNodeElement(child));
+      });
+      wrapper.appendChild(childrenContainer);
+    }
+
+    return wrapper;
+  }
+
+  state.features.forEach(rootFeature => {
+    container.appendChild(createNodeElement(rootFeature, true));
+  });
+
+  initLucideIcons();
+  attachTreeEventListeners();
+}
+
+function getConstraintRefCount(featureName) {
+  return state.constraints.filter(c => c.affectedFeatures.includes(featureName)).length;
+}
+
+function attachTreeEventListeners() {
+  document.querySelectorAll('.edit-feature-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute('data-id');
+      openDetailDrawer(id);
+    });
+  });
+}
+
+// Feature Detail Drawer
+function openDetailDrawer(featureId) {
+  state.selectedFeatureId = featureId;
+  const feature = findFeatureById(state.features, featureId);
+  if (!feature) return;
+
+  document.getElementById('detail-name').value = feature.name;
+  document.getElementById('detail-type').value = feature.type || 'choice';
+  document.getElementById('detail-required').checked = !!feature.required;
+
+  const drawer = document.getElementById('feature-drawer');
+  const backdrop = document.getElementById('drawer-backdrop');
+
+  drawer.classList.add('open');
+  backdrop.classList.add('open');
+
+  // Load related constraints
+  const chipContainer = document.getElementById('drawer-related-constraints');
+  chipContainer.innerHTML = '';
+  const related = state.constraints.filter(c => c.affectedFeatures.includes(feature.name));
+
+  if (related.length === 0) {
+    chipContainer.innerHTML = '<span class="text-muted">No rules directly affect this feature.</span>';
+  } else {
+    related.forEach(r => {
+      const chip = document.createElement('div');
+      chip.className = 'tree-tag';
+      chip.textContent = `${r.type.toUpperCase()}: ${r.name}`;
+      chipContainer.appendChild(chip);
+    });
+  }
+}
+
+function setupDrawerEvents() {
+  const closeBtn = document.getElementById('btn-close-drawer');
+  const cancelBtn = document.getElementById('btn-cancel-drawer');
+  const saveBtn = document.getElementById('btn-save-drawer');
+  const backdrop = document.getElementById('drawer-backdrop');
+
+  const close = () => {
+    document.getElementById('feature-drawer').classList.remove('open');
+    backdrop.classList.remove('open');
+  };
+
+  closeBtn.addEventListener('click', close);
+  cancelBtn.addEventListener('click', close);
+  backdrop.addEventListener('click', close);
+
+  saveBtn.addEventListener('click', () => {
+    if (!state.selectedFeatureId) return;
+    const feature = findFeatureById(state.features, state.selectedFeatureId);
+    if (feature) {
+      feature.name = document.getElementById('detail-name').value;
+      feature.type = document.getElementById('detail-type').value;
+      feature.required = document.getElementById('detail-required').checked;
+      renderFeatureTree();
+      updateExportCode();
+      close();
+    }
+  });
+}
+
+function findFeatureById(nodes, id) {
+  for (const node of nodes) {
+    if (node.id === id) return node;
+    if (node.children) {
+      const res = findFeatureById(node.children, id);
+      if (res) return res;
+    }
+  }
+  return null;
+}
+
+// Constraints Overview Table
+function renderConstraintsTable() {
+  const tbody = document.getElementById('tbody-constraints');
+  tbody.innerHTML = '';
+
+  state.constraints.forEach(c => {
+    const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="table-title">${door.name}</td>
-      <td>${door.line || "N/A"}</td>
-      <td>${door.creator}</td>
-      <td>${door.lastEditor}</td>
-      <td>${door.lastModified}</td>
-      <td>${door.features ? door.features.length : 0} Features</td>
-      <td class="action-cell">
-        <button class="btn btn-primary btn-sm" onclick="openConfigurator('${door.id}')">Configure Door</button>
-        <button class="btn btn-secondary btn-sm" onclick="openEditModal('${door.id}')">Edit Info</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteDoor('${door.id}')">Delete</button>
+      <td><strong>${c.name}</strong></td>
+      <td><span class="tree-tag">${c.type.toUpperCase()}</span></td>
+      <td>${c.affectedFeatures.map(f => `<span class="constraint-count-badge">${f}</span>`).join(' ')}</td>
+      <td><code>${c.logic}</code></td>
+      <td>
+        <button class="btn-icon" title="Edit Constraint"><i data-lucide="edit"></i></button>
+        <button class="btn-icon" title="Delete Constraint"><i data-lucide="trash-2"></i></button>
       </td>
     `;
     tbody.appendChild(tr);
   });
+
+  initLucideIcons();
 }
 
-function openConfigurator(doorId) {
-  activeDoorId = doorId;
-  const door = doorList.find(d => d.id === doorId);
-  if (!door) return;
+// Bulk Add Modal
+function setupBulkModal() {
+  const btnBulk = document.getElementById('btn-bulk-add');
+  const modal = document.getElementById('bulk-modal');
+  const closeBtn = document.getElementById('btn-close-bulk');
+  const cancelBtn = document.getElementById('btn-cancel-bulk');
+  const processBtn = document.getElementById('btn-process-bulk');
+  const parentSelect = document.getElementById('bulk-parent-select');
 
-  document.getElementById("view-table").classList.add("hidden");
-  document.getElementById("view-configurator").classList.remove("hidden");
-  document.getElementById("btn-back-to-list").classList.remove("hidden");
-  document.getElementById("btn-create-meta").classList.add("hidden");
-  document.getElementById("header-title").innerText = `Configurator: ${door.name}`;
-
-  updateConfiguratorSummary(door);
-  renderSidebarFeatures(door);
-  renderCanvas(door);
-}
-
-function backToTable() {
-  activeDoorId = null;
-  document.getElementById("view-configurator").classList.add("hidden");
-  document.getElementById("view-table").classList.remove("hidden");
-  document.getElementById("btn-back-to-list").classList.add("hidden");
-  document.getElementById("btn-create-meta").classList.remove("hidden");
-  document.getElementById("header-title").innerText = "Door Meta-Product Manager";
-  renderTable();
-}
-
-function updateConfiguratorSummary(door) {
-  document.getElementById("summary-name").innerText = door.name;
-  document.getElementById("summary-line").innerText = door.line || "N/A";
-  document.getElementById("summary-creator").innerText = door.creator;
-  document.getElementById("summary-editor").innerText = door.lastEditor;
-  document.getElementById("summary-date").innerText = door.lastModified;
-  document.getElementById("summary-count").innerText = door.features ? door.features.length : 0;
-}
-
-function renderSidebarFeatures(door) {
-  const container = document.getElementById("controls-container");
-  container.innerHTML = "";
-
-  if (!door.features || door.features.length === 0) {
-    container.innerHTML = `<p style="color: #6c757d; font-size: 0.85rem;">No features added yet. Click <strong>+ Add Top Feature</strong> above to start.</p>`;
-    return;
-  }
-
-  door.features.forEach(feat => {
-    const card = document.createElement("div");
-    card.className = "feature-card";
-
-    const header = document.createElement("div");
-    header.className = "feature-header";
-    header.innerHTML = `
-      <span class="feature-title">${feat.name}</span>
-      <button class="btn btn-secondary btn-sm" onclick="promptAddSubFeature('${feat.id}')">+ Add Choice</button>
-    `;
-    card.appendChild(header);
-
-    const subList = document.createElement("div");
-    subList.className = "subfeature-list";
-
-    if (feat.subfeatures && feat.subfeatures.length > 0) {
-      feat.subfeatures.forEach(sub => {
-        const item = document.createElement("div");
-        item.className = "subfeature-item";
-        item.innerHTML = `
-          <div class="subfeature-left">
-            <input type="checkbox" ${sub.active ? "checked" : ""} id="check-${sub.id}">
-            <label for="check-${sub.id}" style="cursor:pointer;">${sub.name}</label>
-          </div>
-          <button class="btn-link" onclick="deleteSubFeature('${feat.id}', '${sub.id}')">&times;</button>
-        `;
-
-        item.querySelector("input").addEventListener("change", (e) => {
-          sub.active = e.target.checked;
-          door.lastEditor = "Alex Rivera";
-          door.lastModified = new Date().toISOString().split("T")[0];
-          saveDoorList();
-          renderCanvas(door);
-        });
-
-        subList.appendChild(item);
-      });
-    } else {
-      subList.innerHTML = `<span style="font-size:0.75rem; color:#adb5bd;">No choices under this feature.</span>`;
-    }
-
-    card.appendChild(subList);
-    container.appendChild(card);
-  });
-}
-
-function renderCanvas(door) {
-  const canvas = document.getElementById("tree-canvas");
-  canvas.innerHTML = "";
-
-  // 1. Root Node
-  const root = document.createElement("div");
-  root.id = "root-node";
-  root.className = "node-root";
-  root.innerText = door.name;
-  canvas.appendChild(root);
-
-  // 2. Feature & Subfeature Hierarchy Grid
-  const row = document.createElement("div");
-  row.className = "feature-nodes-row";
-
-  if (door.features) {
-    door.features.forEach(feat => {
-      const activeSubs = feat.subfeatures ? feat.subfeatures.filter(s => s.active) : [];
-      if (activeSubs.length > 0) {
-        const col = document.createElement("div");
-        col.className = "feature-group-column";
-
-        const featNode = document.createElement("div");
-        featNode.className = "node-feature feat-node";
-        featNode.dataset.id = feat.id;
-        featNode.innerText = feat.name;
-        col.appendChild(featNode);
-
-        const subGrid = document.createElement("div");
-        subGrid.className = "node-subgrid";
-
-        activeSubs.forEach(sub => {
-          const card = document.createElement("div");
-          card.className = "node-card sub-card";
-          card.dataset.subid = sub.id;
-          card.innerHTML = `
-            <h4>${sub.name}</h4>
-            <p>${sub.desc || ""}</p>
-          `;
-          subGrid.appendChild(card);
-        });
-
-        col.appendChild(subGrid);
-        row.appendChild(col);
-      }
+  btnBulk.addEventListener('click', () => {
+    parentSelect.innerHTML = '';
+    state.features.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.id;
+      opt.textContent = f.name;
+      parentSelect.appendChild(opt);
     });
-  }
+    modal.classList.add('open');
+  });
 
-  canvas.appendChild(row);
-  setTimeout(drawConnectors, 50);
-}
+  const closeModal = () => modal.classList.remove('open');
 
-function drawConnectors() {
-  const svg = document.getElementById("svg-connectors");
-  const viewport = document.getElementById("viewport");
-  const rootNode = document.getElementById("root-node");
-  const featNodes = document.querySelectorAll(".feat-node");
+  closeBtn.addEventListener('click', closeModal);
+  cancelBtn.addEventListener('click', closeModal);
 
-  if (!svg || !viewport || !rootNode) return;
+  processBtn.addEventListener('click', () => {
+    const rawText = document.getElementById('bulk-input').value;
+    const parentId = parentSelect.value;
+    if (!rawText.trim()) return;
 
-  svg.innerHTML = "";
+    const items = rawText.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
+    const parent = findFeatureById(state.features, parentId);
 
-  const viewportRect = viewport.getBoundingClientRect();
-  const rootRect = rootNode.getBoundingClientRect();
-
-  const startX = rootRect.left + rootRect.width / 2 - viewportRect.left + viewport.scrollLeft;
-  const startY = rootRect.bottom - viewportRect.top + viewport.scrollTop;
-
-  featNodes.forEach(feat => {
-    const featRect = feat.getBoundingClientRect();
-    const endX = featRect.left + featRect.width / 2 - viewportRect.left + viewport.scrollLeft;
-    const endY = featRect.top - viewportRect.top + viewport.scrollTop;
-
-    const controlY = startY + (endY - startY) / 2;
-    const pathD = `M ${startX} ${startY} C ${startX} ${controlY}, ${endX} ${controlY}, ${endX} ${endY}`;
-
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", pathD);
-    path.setAttribute("stroke", "#0d6efd");
-    path.setAttribute("stroke-width", "2");
-    path.setAttribute("fill", "none");
-    path.setAttribute("stroke-dasharray", "4,4");
-    path.setAttribute("opacity", "0.6");
-
-    svg.appendChild(path);
+    if (parent) {
+      if (!parent.children) parent.children = [];
+      items.forEach((item, idx) => {
+        parent.children.push({
+          id: `${parent.id}-bulk-${Date.now()}-${idx}`,
+          name: item,
+          type: 'choice'
+        });
+      });
+      renderFeatureTree();
+      updateExportCode();
+      document.getElementById('bulk-input').value = '';
+      closeModal();
+    }
   });
 }
 
-function setupEventListeners() {
-  const modal = document.getElementById("modal-create");
-  const subModal = document.getElementById("modal-subfeature");
-  const btnCreate = document.getElementById("btn-create-meta");
-  const btnBack = document.getElementById("btn-back-to-list");
-  const btnClose = document.getElementById("btn-close-modal");
-  const btnCancel = document.getElementById("btn-cancel-modal");
-  const formCreate = document.getElementById("form-create-meta");
-  const btnAddFeature = document.getElementById("btn-add-feature");
+// Interactive Test Engine Simulation
+function setupTestingEngine() {
+  const container = document.getElementById('test-form-container');
+  container.innerHTML = '';
 
-  btnCreate.addEventListener("click", () => {
-    document.getElementById("modal-title").innerText = "Create New Door Model";
-    document.getElementById("input-id").value = "";
-    formCreate.reset();
-    document.getElementById("input-creator").value = "Alex Rivera";
-    modal.classList.remove("hidden");
-  });
+  state.features.forEach(cat => {
+    const group = document.createElement('div');
+    group.className = 'form-group';
+    group.innerHTML = `<label>${cat.name}</label>`;
 
-  btnBack.addEventListener("click", backToTable);
-  btnClose.addEventListener("click", () => modal.classList.add("hidden"));
-  btnCancel.addEventListener("click", () => modal.classList.add("hidden"));
+    const select = document.createElement('select');
+    select.className = 'form-control test-select';
 
-  document.getElementById("btn-close-submodal").addEventListener("click", () => subModal.classList.add("hidden"));
-  document.getElementById("btn-cancel-submodal").addEventListener("click", () => subModal.classList.add("hidden"));
-
-  // Add Top Feature
-  btnAddFeature.addEventListener("click", () => {
-    if (!activeDoorId) return;
-    const name = prompt("Enter New Top-Level Feature Name (e.g. Fire-Rating & Seals):");
-    if (name) {
-      const door = doorList.find(d => d.id === activeDoorId);
-      if (door) {
-        if (!door.features) door.features = [];
-        door.features.push({
-          id: "feat-" + Date.now(),
-          name,
-          subfeatures: []
-        });
-        saveDoorList();
-        updateConfiguratorSummary(door);
-        renderSidebarFeatures(door);
-        renderCanvas(door);
-      }
-    }
-  });
-
-  // Submit Sub-Feature Modal
-  document.getElementById("form-add-subfeature").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const featId = document.getElementById("subfeature-feature-id").value;
-    const name = document.getElementById("input-sub-name").value.trim();
-    const desc = document.getElementById("input-sub-desc").value.trim();
-
-    const door = doorList.find(d => d.id === activeDoorId);
-    if (door && featId) {
-      const feat = door.features.find(f => f.id === featId);
-      if (feat) {
-        if (!feat.subfeatures) feat.subfeatures = [];
-        feat.subfeatures.push({
-          id: "sub-" + Date.now(),
-          name,
-          desc,
-          active: true
-        });
-        saveDoorList();
-        renderSidebarFeatures(door);
-        renderCanvas(door);
-      }
+    if (cat.children) {
+      cat.children.forEach(sub => {
+        if (sub.children) {
+          sub.children.forEach(opt => {
+            const el = document.createElement('option');
+            el.value = opt.name;
+            el.textContent = `${sub.name}: ${opt.name}`;
+            select.appendChild(el);
+          });
+        }
+      });
     }
 
-    subModal.classList.add("hidden");
-    document.getElementById("form-add-subfeature").reset();
+    select.addEventListener('change', runTestEngineValidation);
+    group.appendChild(select);
+    container.appendChild(group);
   });
 
-  formCreate.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const id = document.getElementById("input-id").value;
-    const name = document.getElementById("input-name").value.trim();
-    const line = document.getElementById("input-line").value.trim();
-    const creator = document.getElementById("input-creator").value.trim() || "Alex Rivera";
-    const today = new Date().toISOString().split("T")[0];
+  runTestEngineValidation();
+}
 
-    if (id) {
-      const door = doorList.find(d => d.id === id);
-      if (door) {
-        door.name = name;
-        door.line = line;
-        door.lastEditor = creator;
-        door.lastModified = today;
-      }
+function runTestEngineValidation() {
+  const log = document.getElementById('rule-log');
+  log.innerHTML = '';
+
+  const selectedValues = Array.from(document.querySelectorAll('.test-select')).map(s => s.value);
+
+  let hasConflict = false;
+
+  state.constraints.forEach(c => {
+    const li = document.createElement('li');
+
+    if (selectedValues.includes('HVHZ Coastal Impact Rated') && selectedValues.includes('Solid Oak')) {
+      hasConflict = true;
+      li.style.color = '#ef4444';
+      li.textContent = `❌ Constraint Violated [${c.name}]: Solid Oak cannot be combined with HVHZ Coastal Impact glass.`;
     } else {
-      const newDoor = {
-        id: "door-" + Date.now(),
-        name,
-        line,
-        creator,
-        lastEditor: creator,
-        lastModified: today,
-        features: [
-          {
-            id: "feat-frame",
-            name: "Frame Material & Core",
-            subfeatures: [
-              { id: "sub-oak", name: "Solid Natural Oak", desc: "Heavyweight hardwood core frame", active: true }
-            ]
-          }
-        ]
-      };
-      doorList.push(newDoor);
+      li.style.color = '#10b981';
+      li.textContent = `✔ Rule Passed [${c.name}]`;
     }
-
-    saveDoorList();
-    renderTable();
-    modal.classList.add("hidden");
+    log.appendChild(li);
   });
-}
 
-function promptAddSubFeature(featId) {
-  document.getElementById("subfeature-feature-id").value = featId;
-  document.getElementById("form-add-subfeature").reset();
-  document.getElementById("modal-subfeature").classList.remove("hidden");
-}
-
-function deleteSubFeature(featId, subId) {
-  const door = doorList.find(d => d.id === activeDoorId);
-  if (!door) return;
-
-  const feat = door.features.find(f => f.id === featId);
-  if (feat) {
-    feat.subfeatures = feat.subfeatures.filter(s => s.id !== subId);
-    saveDoorList();
-    renderSidebarFeatures(door);
-    renderCanvas(door);
+  const statusEl = document.getElementById('eval-status');
+  if (hasConflict) {
+    statusEl.innerHTML = '<span style="color:#ef4444; font-weight:bold;">❌ Invalid Combination Detected</span>';
+  } else {
+    statusEl.innerHTML = '<span style="color:#10b981; font-weight:bold;">✔ Valid Entry Door Configuration</span>';
   }
 }
 
-function openEditModal(doorId) {
-  const door = doorList.find(d => d.id === doorId);
-  if (!door) return;
-
-  document.getElementById("modal-title").innerText = "Edit Door Details";
-  document.getElementById("input-id").value = door.id;
-  document.getElementById("input-name").value = door.name;
-  document.getElementById("input-line").value = door.line || "";
-  document.getElementById("input-creator").value = door.lastEditor;
-
-  document.getElementById("modal-create").classList.remove("hidden");
-}
-
-function deleteDoor(doorId) {
-  if (confirm("Are you sure you want to delete this door model?")) {
-    doorList = doorList.filter(d => d.id !== doorId);
-    saveDoorList();
-    renderTable();
+// Export Code Generator
+function updateExportCode() {
+  const exportContainer = document.getElementById('export-json-code');
+  if (exportContainer) {
+    exportContainer.textContent = JSON.stringify(state, null, 2);
   }
 }
