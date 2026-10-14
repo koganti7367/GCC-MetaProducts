@@ -21,7 +21,11 @@
       </div>
 
       <nav class="nav-menu">
-        <button class="nav-btn active" data-view="features">
+        <button class="nav-btn active" data-view="metas">
+          <i data-lucide="layers"></i>
+          <span>Meta Products</span>
+        </button>
+        <button class="nav-btn" data-view="features">
           <i data-lucide="folder-tree"></i>
           <span>Feature Hierarchy</span>
         </button>
@@ -47,7 +51,7 @@
       <div class="sidebar-footer">
         <div class="product-info">
           <span class="label">Active Model:</span>
-          <strong class="value">Entry Door System v2.4</strong>
+          <strong class="value" id="active-model-label">Entry Door System v2.4</strong>
         </div>
       </div>
     </aside>
@@ -57,9 +61,12 @@
       <!-- Top Navigation Header -->
       <header class="top-header">
         <div class="header-breadcrumbs" id="breadcrumbs">
-          <span>Meta-Product</span> / <strong id="current-view-title">Feature Hierarchy</strong>
+          <span>Meta-Product</span> / <strong id="current-view-title">Meta Products</strong>
         </div>
         <div class="header-actions">
+          <button class="btn btn-primary" id="btn-create-meta-header">
+            <i data-lucide="plus"></i> Create Meta Product
+          </button>
           <button class="btn btn-secondary" id="btn-quick-export">
             <i data-lucide="download"></i> Quick Export
           </button>
@@ -71,8 +78,36 @@
 
       <!-- View Containers -->
       <div class="view-viewport">
+        <!-- View 0: Meta Products Tabular Landing Page -->
+        <section id="view-metas" class="view-panel active">
+          <div class="view-header">
+            <div>
+              <h2>Meta Products Catalog</h2>
+              <p class="subtitle">Manage all product configurations, model lines, and structural templates.</p>
+            </div>
+          </div>
+
+          <div class="constraint-table-wrapper">
+            <table class="data-table" id="table-metas">
+              <thead>
+                <tr>
+                  <th>Product Model Name</th>
+                  <th>Product Line</th>
+                  <th>Creator</th>
+                  <th>Last Editor</th>
+                  <th>Last Modified</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-metas">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
         <!-- View 1: Primary Feature Management -->
-        <section id="view-features" class="view-panel active">
+        <section id="view-features" class="view-panel">
           <div class="view-header">
             <div>
               <h2>Primary Feature Hierarchy</h2>

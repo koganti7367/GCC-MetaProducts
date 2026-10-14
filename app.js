@@ -1,84 +1,116 @@
-// Entry Door Meta-Product Data Store
+// Multi-Product Meta-Product Data Store
 const state = {
-  activeView: 'features',
-  selectedFeatureId: null,
-  features: [
+  activeModelId: 'door-001',
+  products: [
     {
-      id: 'f1',
-      name: 'Door Slab',
-      type: 'category',
-      required: true,
-      children: [
-        { id: 'f1-1', name: 'Material', type: 'choice', required: true, children: [
-          { id: 'f1-1-1', name: 'Fiberglass', type: 'choice' },
-          { id: 'f1-1-2', name: 'Steel', type: 'choice' },
-          { id: 'f1-1-3', name: 'Solid Oak', type: 'choice' }
-        ]},
-        { id: 'f1-2', name: 'Slab Style', type: 'choice', required: true, children: [
-          { id: 'f1-2-1', name: 'Flush Panel', type: 'choice' },
-          { id: 'f1-2-2', name: '6-Panel Traditional', type: 'choice' },
-          { id: 'f1-2-3', name: 'Craftsman 3-Panel', type: 'choice' }
-        ]}
+      id: 'door-001',
+      name: 'Entry Door System v2.4',
+      line: 'ProSeries Exterior',
+      creator: 'Alex Rivera',
+      lastEditor: 'Jordan Lee',
+      lastModified: '2026-10-13',
+      features: [
+        {
+          id: 'f1',
+          name: 'Door Slab',
+          type: 'category',
+          required: true,
+          children: [
+            { id: 'f1-1', name: 'Material', type: 'choice', required: true, children: [
+              { id: 'f1-1-1', name: 'Fiberglass', type: 'choice' },
+              { id: 'f1-1-2', name: 'Steel', type: 'choice' },
+              { id: 'f1-1-3', name: 'Solid Oak', type: 'choice' }
+            ]},
+            { id: 'f1-2', name: 'Slab Style', type: 'choice', required: true, children: [
+              { id: 'f1-2-1', name: 'Flush Panel', type: 'choice' },
+              { id: 'f1-2-2', name: '6-Panel Traditional', type: 'choice' },
+              { id: 'f1-2-3', name: 'Craftsman 3-Panel', type: 'choice' }
+            ]}
+          ]
+        },
+        {
+          id: 'f2',
+          name: 'Glazing & Glass Options',
+          type: 'category',
+          required: false,
+          children: [
+            { id: 'f2-1', name: 'Glass Style', type: 'choice', children: [
+              { id: 'f2-1-1', name: 'Clear Insulated', type: 'choice' },
+              { id: 'f2-1-2', name: 'Frosted Privacy', type: 'choice' },
+              { id: 'f2-1-3', name: 'Decorative Stained', type: 'choice' }
+            ]},
+            { id: 'f2-2', name: 'Impact Resistance Rating', type: 'choice', children: [
+              { id: 'f2-2-1', name: 'Standard Non-Impact', type: 'choice' },
+              { id: 'f2-2-2', name: 'HVHZ Coastal Impact Rated', type: 'choice' }
+            ]}
+          ]
+        },
+        {
+          id: 'f3',
+          name: 'Hardware & Locksets',
+          type: 'category',
+          required: true,
+          children: [
+            { id: 'f3-1', name: 'Finish', type: 'choice', children: [
+              { id: 'f3-1-1', name: 'Matte Black', type: 'choice' },
+              { id: 'f3-1-2', name: 'Satin Nickel', type: 'choice' },
+              { id: 'f3-1-3', name: 'Oil Rubbed Bronze', type: 'choice' }
+            ]}
+          ]
+        }
+      ],
+      constraints: [
+        {
+          id: 'c1',
+          name: 'Coastal Impact Frame Requirement',
+          type: 'rule',
+          affectedFeatures: ['HVHZ Coastal Impact Rated', 'Material'],
+          logic: 'IF Glazing == "HVHZ Coastal Impact Rated" THEN Material CANNOT BE "Solid Oak"'
+        }
       ]
     },
     {
-      id: 'f2',
-      name: 'Glazing & Glass Options',
-      type: 'category',
-      required: false,
-      children: [
-        { id: 'f2-1', name: 'Glass Style', type: 'choice', children: [
-          { id: 'f2-1-1', name: 'Clear Insulated', type: 'choice' },
-          { id: 'f2-1-2', name: 'Frosted Privacy', type: 'choice' },
-          { id: 'f2-1-3', name: 'Decorative Stained', type: 'choice' }
-        ]},
-        { id: 'f2-2', name: 'Impact Resistance Rating', type: 'choice', children: [
-          { id: 'f2-2-1', name: 'Standard Non-Impact', type: 'choice' },
-          { id: 'f2-2-2', name: 'HVHZ Coastal Impact Rated', type: 'choice' }
-        ]}
-      ]
-    },
-    {
-      id: 'f3',
-      name: 'Hardware & Locksets',
-      type: 'category',
-      required: true,
-      children: [
-        { id: 'f3-1', name: 'Finish', type: 'choice', children: [
-          { id: 'f3-1-1', name: 'Matte Black', type: 'choice' },
-          { id: 'f3-1-2', name: 'Satin Nickel', type: 'choice' },
-          { id: 'f3-1-3', name: 'Oil Rubbed Bronze', type: 'choice' }
-        ]}
-      ]
-    }
-  ],
-  constraints: [
-    {
-      id: 'c1',
-      name: 'Coastal Impact Frame Requirement',
-      type: 'rule',
-      affectedFeatures: ['HVHZ Coastal Impact Rated', 'Material'],
-      logic: 'IF Glazing == "HVHZ Coastal Impact Rated" THEN Material CANNOT BE "Solid Oak"'
-    },
-    {
-      id: 'c2',
-      name: 'Craftsman Hardware Finish Whitelist',
-      type: 'whitelist',
-      affectedFeatures: ['Craftsman 3-Panel', 'Finish'],
-      logic: 'Craftsman 3-Panel ALLOWS ONLY ["Matte Black", "Oil Rubbed Bronze"]'
+      id: 'door-002',
+      name: 'Sliding Patio Glass System',
+      line: 'VistaView Series',
+      creator: 'Samantha Chen',
+      lastEditor: 'Alex Rivera',
+      lastModified: '2026-10-11',
+      features: [
+        {
+          id: 'p2-f1',
+          name: 'Panel Configuration',
+          type: 'category',
+          required: true,
+          children: [
+            { id: 'p2-f1-1', name: 'Number of Panels', type: 'choice', children: [
+              { id: 'p2-f1-1-1', name: '2-Panel Slider', type: 'choice' },
+              { id: 'p2-f1-1-2', name: '3-Panel Multi-Slide', type: 'choice' }
+            ]}
+          ]
+        }
+      ],
+      constraints: []
     }
   ]
 };
+
+// Helper to get active product
+function getActiveProduct() {
+  return state.products.find(p => p.id === state.activeModelId) || state.products[0];
+}
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
   initLucideIcons();
   setupNavigation();
+  renderMetaProductsTable();
   renderFeatureTree();
   renderConstraintsTable();
   setupDrawerEvents();
   setupBulkModal();
   setupTestingEngine();
+  setupHeaderCreateButton();
   updateExportCode();
 });
 
@@ -106,14 +138,97 @@ function setupNavigation() {
 
       const viewTitle = btn.querySelector('span').textContent;
       document.getElementById('current-view-title').textContent = viewTitle;
+
+      if (targetView === 'metas') {
+        renderMetaProductsTable();
+      }
     });
   });
+}
+
+// Render Meta Products Tabular List
+function renderMetaProductsTable() {
+  const tbody = document.getElementById('tbody-metas');
+  tbody.innerHTML = '';
+
+  state.products.forEach(prod => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${prod.name}</strong></td>
+      <td>${prod.line || 'Standard'}</td>
+      <td>${prod.creator}</td>
+      <td>${prod.lastEditor}</td>
+      <td>${prod.lastModified}</td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="openProduct('${prod.id}')">
+          <i data-lucide="edit-3"></i> View / Edit
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  initLucideIcons();
+}
+
+function openProduct(productId) {
+  state.activeModelId = productId;
+  const prod = getActiveProduct();
+  
+  document.getElementById('active-model-label').textContent = prod.name;
+
+  // Switch view to Feature Hierarchy
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.nav-btn[data-view="features"]').classList.add('active');
+
+  document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+  document.getElementById('view-features').classList.add('active');
+  document.getElementById('current-view-title').textContent = 'Feature Hierarchy';
+
+  renderFeatureTree();
+  renderConstraintsTable();
+  setupTestingEngine();
+  updateExportCode();
+}
+
+// Header Create Meta Product Button
+function setupHeaderCreateButton() {
+  const btnCreate = document.getElementById('btn-create-meta-header');
+  if (btnCreate) {
+    btnCreate.addEventListener('click', () => {
+      const newId = 'door-' + Date.now();
+      const newProduct = {
+        id: newId,
+        name: 'New Custom Meta Product',
+        line: 'Custom Series',
+        creator: 'Alex Rivera',
+        lastEditor: 'Alex Rivera',
+        lastModified: new Date().toISOString().split('T')[0],
+        features: [
+          {
+            id: newId + '-f1',
+            name: 'Root Feature Component',
+            type: 'category',
+            required: true,
+            children: [
+              { id: newId + '-f1-1', name: 'Default Choice Option', type: 'choice' }
+            ]
+          }
+        ],
+        constraints: []
+      };
+
+      state.products.push(newProduct);
+      openProduct(newId);
+    });
+  }
 }
 
 // Render Feature Tree
 function renderFeatureTree() {
   const container = document.getElementById('feature-tree');
   container.innerHTML = '';
+  const prod = getActiveProduct();
 
   function createNodeElement(node, isRoot = false) {
     const wrapper = document.createElement('div');
@@ -148,7 +263,7 @@ function renderFeatureTree() {
     return wrapper;
   }
 
-  state.features.forEach(rootFeature => {
+  prod.features.forEach(rootFeature => {
     container.appendChild(createNodeElement(rootFeature, true));
   });
 
@@ -157,7 +272,8 @@ function renderFeatureTree() {
 }
 
 function getConstraintRefCount(featureName) {
-  return state.constraints.filter(c => c.affectedFeatures.includes(featureName)).length;
+  const prod = getActiveProduct();
+  return prod.constraints.filter(c => c.affectedFeatures.includes(featureName)).length;
 }
 
 function attachTreeEventListeners() {
@@ -173,7 +289,8 @@ function attachTreeEventListeners() {
 // Feature Detail Drawer
 function openDetailDrawer(featureId) {
   state.selectedFeatureId = featureId;
-  const feature = findFeatureById(state.features, featureId);
+  const prod = getActiveProduct();
+  const feature = findFeatureById(prod.features, featureId);
   if (!feature) return;
 
   document.getElementById('detail-name').value = feature.name;
@@ -189,10 +306,10 @@ function openDetailDrawer(featureId) {
   // Load related constraints
   const chipContainer = document.getElementById('drawer-related-constraints');
   chipContainer.innerHTML = '';
-  const related = state.constraints.filter(c => c.affectedFeatures.includes(feature.name));
+  const related = prod.constraints.filter(c => c.affectedFeatures.includes(feature.name));
 
   if (related.length === 0) {
-    chipContainer.innerHTML = '<span class="text-muted">No rules directly affect this feature.</span>';
+    chipContainer.innerHTML = '<span class="text-muted" style="color:var(--text-muted); font-size:0.85rem;">No rules directly affect this feature.</span>';
   } else {
     related.forEach(r => {
       const chip = document.createElement('div');
@@ -220,11 +337,13 @@ function setupDrawerEvents() {
 
   saveBtn.addEventListener('click', () => {
     if (!state.selectedFeatureId) return;
-    const feature = findFeatureById(state.features, state.selectedFeatureId);
+    const prod = getActiveProduct();
+    const feature = findFeatureById(prod.features, state.selectedFeatureId);
     if (feature) {
       feature.name = document.getElementById('detail-name').value;
       feature.type = document.getElementById('detail-type').value;
       feature.required = document.getElementById('detail-required').checked;
+      prod.lastModified = new Date().toISOString().split('T')[0];
       renderFeatureTree();
       updateExportCode();
       close();
@@ -247,8 +366,9 @@ function findFeatureById(nodes, id) {
 function renderConstraintsTable() {
   const tbody = document.getElementById('tbody-constraints');
   tbody.innerHTML = '';
+  const prod = getActiveProduct();
 
-  state.constraints.forEach(c => {
+  prod.constraints.forEach(c => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><strong>${c.name}</strong></td>
@@ -276,8 +396,9 @@ function setupBulkModal() {
   const parentSelect = document.getElementById('bulk-parent-select');
 
   btnBulk.addEventListener('click', () => {
+    const prod = getActiveProduct();
     parentSelect.innerHTML = '';
-    state.features.forEach(f => {
+    prod.features.forEach(f => {
       const opt = document.createElement('option');
       opt.value = f.id;
       opt.textContent = f.name;
@@ -297,7 +418,8 @@ function setupBulkModal() {
     if (!rawText.trim()) return;
 
     const items = rawText.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
-    const parent = findFeatureById(state.features, parentId);
+    const prod = getActiveProduct();
+    const parent = findFeatureById(prod.features, parentId);
 
     if (parent) {
       if (!parent.children) parent.children = [];
@@ -308,6 +430,7 @@ function setupBulkModal() {
           type: 'choice'
         });
       });
+      prod.lastModified = new Date().toISOString().split('T')[0];
       renderFeatureTree();
       updateExportCode();
       document.getElementById('bulk-input').value = '';
@@ -320,8 +443,9 @@ function setupBulkModal() {
 function setupTestingEngine() {
   const container = document.getElementById('test-form-container');
   container.innerHTML = '';
+  const prod = getActiveProduct();
 
-  state.features.forEach(cat => {
+  prod.features.forEach(cat => {
     const group = document.createElement('div');
     group.className = 'form-group';
     group.innerHTML = `<label>${cat.name}</label>`;
@@ -353,12 +477,13 @@ function setupTestingEngine() {
 function runTestEngineValidation() {
   const log = document.getElementById('rule-log');
   log.innerHTML = '';
+  const prod = getActiveProduct();
 
   const selectedValues = Array.from(document.querySelectorAll('.test-select')).map(s => s.value);
 
   let hasConflict = false;
 
-  state.constraints.forEach(c => {
+  prod.constraints.forEach(c => {
     const li = document.createElement('li');
 
     if (selectedValues.includes('HVHZ Coastal Impact Rated') && selectedValues.includes('Solid Oak')) {
@@ -384,6 +509,7 @@ function runTestEngineValidation() {
 function updateExportCode() {
   const exportContainer = document.getElementById('export-json-code');
   if (exportContainer) {
-    exportContainer.textContent = JSON.stringify(state, null, 2);
+    const prod = getActiveProduct();
+    exportContainer.textContent = JSON.stringify(prod, null, 2);
   }
 }
