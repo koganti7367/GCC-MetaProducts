@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Entry Door Meta-Product Builder</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="style.css">
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -71,7 +71,7 @@
 
       <!-- View Containers -->
       <div class="view-viewport">
-        <!-- View 1: Primary Feature Management (2961) -->
+        <!-- View 1: Primary Feature Management -->
         <section id="view-features" class="view-panel active">
           <div class="view-header">
             <div>
@@ -93,7 +93,7 @@
           </div>
         </section>
 
-        <!-- View 2: Feature Detail Edit Drawer/Modal (2962) -->
+        <!-- View 2: Feature Detail Edit Drawer/Modal -->
         <div class="drawer-backdrop" id="drawer-backdrop"></div>
         <aside class="drawer" id="feature-drawer">
           <div class="drawer-header">
@@ -126,7 +126,7 @@
                 <textarea id="detail-description" class="form-control" rows="3"></textarea>
               </div>
 
-              <hr>
+              <hr style="margin: 1rem 0; border: 0; border-top: 1px solid var(--border-color);">
 
               <div class="related-constraints-section">
                 <h4>Referenced Constraints</h4>
@@ -142,7 +142,7 @@
           </div>
         </aside>
 
-        <!-- View 3: Constraint Overview (2963) & Management (2965) -->
+        <!-- View 3: Constraint Overview & Management -->
         <section id="view-constraints" class="view-panel">
           <div class="view-header">
             <div>
@@ -183,7 +183,7 @@
           </div>
         </section>
 
-        <!-- View 4: Model Testing (2966) -->
+        <!-- View 4: Model Testing -->
         <section id="view-test" class="view-panel">
           <div class="view-header">
             <div>
@@ -214,7 +214,7 @@
           </div>
         </section>
 
-        <!-- View 5: Autobahn Setup (2968) -->
+        <!-- View 5: Autobahn Setup -->
         <section id="view-autobahn" class="view-panel">
           <div class="view-header">
             <div>
@@ -241,7 +241,7 @@
           </div>
         </section>
 
-        <!-- View 6: Export Meta-Product (2969) -->
+        <!-- View 6: Export Meta-Product -->
         <section id="view-export" class="view-panel">
           <div class="view-header">
             <div>
@@ -273,7 +273,7 @@
       <div class="modal-body">
         <p>Paste a comma, newline, or semicolon delimited list of options:</p>
         <textarea id="bulk-input" class="form-control" rows="6" placeholder="Satin Nickel, Matte Black, Oil Rubbed Bronze, Polished Chrome"></textarea>
-        <div class="form-group mt-3">
+        <div class="form-group mt-3" style="margin-top: 1rem;">
           <label for="bulk-parent-select">Add under parent category:</label>
           <select id="bulk-parent-select" class="form-control">
             <!-- Rendered dynamically -->
