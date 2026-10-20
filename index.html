@@ -16,7 +16,7 @@
         <i data-lucide="door-open" class="brand-icon"></i>
         <div class="brand-text">
           <span class="brand-title">MetaBuilder</span>
-          <span class="brand-subtitle">Entry Door Engine</span>
+          <span class="brand-subtitle">Product Engine</span>
         </div>
       </div>
 
@@ -111,7 +111,7 @@
           <div class="view-header">
             <div>
               <h2>Primary Feature Hierarchy</h2>
-              <p class="subtitle">Organize, rename, and structure your Entry Door options & configurations.</p>
+              <p class="subtitle">Organize, rename, and structure your product options & configurations.</p>
             </div>
             <div class="toolbar">
               <button class="btn btn-outline" id="btn-bulk-add">
@@ -122,6 +122,15 @@
               </button>
             </div>
           </div>
+
+          <!-- Shortcuts Legend Bar -->
+          <ul class="keys-legend" aria-label="Keyboard shortcuts">
+            <li><kbd>Enter</kbd> Add item below</li>
+            <li><kbd>Tab</kbd> Nest item</li>
+            <li><kbd>Shift</kbd>+<kbd>Tab</kbd> Move up level</li>
+            <li><kbd>;</kbd> Split multiple (e.g. <em>Oak; Steel; Glass</em>)</li>
+            <li><kbd>↑</kbd> <kbd>↓</kbd> Navigate rows</li>
+          </ul>
 
           <div class="tree-container" id="feature-tree">
             <!-- Rendered dynamically by JS -->
@@ -223,12 +232,12 @@
           <div class="view-header">
             <div>
               <h2>Model Interactive Test Engine</h2>
-              <p class="subtitle">Simulate real-time Entry Door configuration and evaluate rules live.</p>
+              <p class="subtitle">Simulate real-time product configuration and evaluate rules live.</p>
             </div>
           </div>
           <div class="test-grid">
             <div class="card test-config-card">
-              <h3>Door Configurator</h3>
+              <h3>Product Configurator</h3>
               <div id="test-form-container">
                 <!-- Dynamically generated test inputs -->
               </div>
@@ -298,6 +307,39 @@
     </main>
   </div>
 
+  <!-- Modal: Create Meta Product -->
+  <div class="modal-backdrop" id="create-meta-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Create Meta Product</h3>
+        <button class="btn-icon" id="btn-close-create-meta"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-create-meta">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="create-product-name">Product Model Name *</label>
+            <input type="text" id="create-product-name" class="form-control" placeholder="e.g. Modern Architectural Entry Door" required />
+          </div>
+          <div class="form-group mt-3" style="margin-top: 1rem;">
+            <label for="create-product-line">Product Line *</label>
+            <select id="create-product-line" class="form-control" required>
+              <option value="Millwork">Millwork</option>
+              <option value="Custom blinds">Custom blinds</option>
+              <option value="Shutters">Shutters</option>
+              <option value="Cabinets">Cabinets</option>
+              <option value="Flooring">Flooring</option>
+              <option value="Counter tops">Counter tops</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-create-meta">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create & Configure</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Modal: Bulk Paste Parser -->
   <div class="modal-backdrop" id="bulk-modal">
     <div class="modal">
@@ -321,6 +363,8 @@
       </div>
     </div>
   </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
 
   <script src="app.js"></script>
 </body>

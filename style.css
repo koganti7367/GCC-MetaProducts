@@ -13,6 +13,9 @@
   --badge-bg: #ef4444;
   --radius: 8px;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --accent-soft: #e0e7ff;
+  --req-soft: #fef3c7;
+  --req-text: #b45309;
 }
 
 * {
@@ -179,13 +182,43 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .subtitle {
   color: var(--text-muted);
   font-size: 0.9rem;
   margin-top: 4px;
+}
+
+/* Shortcuts Legend */
+.keys-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.keys-legend li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+kbd {
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-main);
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 1px 5px;
 }
 
 /* Buttons */
@@ -238,6 +271,9 @@ body {
   padding: 4px;
   border-radius: 4px;
   color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-icon:hover {
@@ -245,40 +281,137 @@ body {
   color: var(--text-main);
 }
 
-/* Tree Component */
+/* Interactive Keyboard Tree Styling */
 .tree-container {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 12px 10px 14px;
 }
 
-.tree-node {
+ul.tree, ul.kids {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.kids {
   margin-left: 20px;
-  margin-top: 8px;
+  padding-left: 10px;
+  border-left: 1px solid var(--border-color);
 }
 
-.tree-node.root-node {
-  margin-left: 0;
+li.tree-item {
+  position: relative;
 }
 
-.tree-node-content {
+li.dragging {
+  opacity: 0.4;
+}
+
+.tree-row {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 6px;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+}
+
+.tree-row:hover, .tree-row:focus-within {
   background: #f8fafc;
-  border: 1px solid var(--border-color);
 }
 
-.tree-node-content:hover {
-  background: #f1f5f9;
+.tree-row.root-row {
+  padding: 8px 6px;
 }
 
-.tree-node-title {
-  font-weight: 500;
+.grip {
+  width: 18px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  cursor: grab;
+  flex: none;
+  opacity: 0.5;
+  border-radius: 4px;
+}
+
+.tree-row:hover .grip {
+  opacity: 1;
+}
+
+.grip:active {
+  cursor: grabbing;
+}
+
+.spacer {
+  width: 18px;
+  flex: none;
+}
+
+.chev {
+  width: 24px;
+  height: 28px;
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.chev:hover {
+  background: var(--border-color);
+}
+
+.chev.collapsed {
+  transform: rotate(-90deg);
+}
+
+.kind-icon {
+  flex: none;
+  width: 22px;
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+}
+
+input.name-input {
   flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 0.925rem;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+input.name-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+input.name-input:focus {
+  background: #ffffff;
+  outline: 2px solid var(--primary);
+}
+
+.tree-row.root-row input.name-input {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.badges {
+  display: flex;
+  gap: 6px;
+  flex: none;
 }
 
 .tree-tag {
@@ -289,7 +422,16 @@ body {
   border-radius: 12px;
 }
 
-/* Constraint Badge */
+.tree-tag.req {
+  background: var(--req-soft);
+  color: var(--req-text);
+}
+
+.tree-tag.sel {
+  background: var(--accent-soft);
+  color: var(--primary);
+}
+
 .constraint-count-badge {
   font-size: 0.75rem;
   background: #fef3c7;
@@ -297,6 +439,35 @@ body {
   padding: 2px 8px;
   border-radius: 12px;
 }
+
+.actions {
+  display: flex;
+  gap: 2px;
+  flex: none;
+  opacity: 0.6;
+  align-items: center;
+}
+
+.tree-row:hover .actions, .tree-row:focus-within .actions {
+  opacity: 1;
+}
+
+/* Drag states */
+.tree-row.drop-before::before, .tree-row.drop-after::after, .tree-row.drop-first::after {
+  content: "";
+  position: absolute;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--primary);
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+.tree-row.drop-before::before { top: -2px; }
+.tree-row.drop-after::after { bottom: -2px; }
+.tree-row.drop-first::after { bottom: -2px; left: 28px; }
+.tree-row.drop-into { background: #eff6ff; outline: 2px solid var(--primary); }
 
 /* Tables */
 .constraint-table-wrapper {
@@ -395,13 +566,8 @@ body {
   flex-direction: column;
 }
 
-.drawer.open {
-  right: 0;
-}
-
-.drawer-backdrop.open {
-  display: block;
-}
+.drawer.open { right: 0; }
+.drawer-backdrop.open { display: block; }
 
 .drawer-header {
   padding: 16px 20px;
@@ -425,7 +591,7 @@ body {
   gap: 12px;
 }
 
-/* Modals */
+/* Modals & Toast */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -436,9 +602,7 @@ body {
   z-index: 200;
 }
 
-.modal-backdrop.open {
-  display: flex;
-}
+.modal-backdrop.open { display: flex; }
 
 .modal {
   background: white;
@@ -456,9 +620,7 @@ body {
   align-items: center;
 }
 
-.modal-body {
-  padding: 20px;
-}
+.modal-body { padding: 20px; }
 
 .modal-footer {
   padding: 16px 20px;
@@ -466,6 +628,43 @@ body {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+#toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  bottom: 24px;
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 8px;
+  padding: 10px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 0.875rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s, transform 0.15s;
+  z-index: 300;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+#toast button {
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #38bdf8;
+  background: transparent;
+  border: 1px solid #38bdf8;
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
 }
 
 /* Code Preview */
