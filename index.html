@@ -10,7 +10,7 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- Sidebar Navigation with Parent / Child Hierarchy -->
+    <!-- Sidebar Navigation with Parent & Child Hierarchy -->
     <aside class="sidebar">
       <div class="brand">
         <i data-lucide="door-open" class="brand-icon"></i>
@@ -21,13 +21,11 @@
       </div>
 
       <nav class="nav-menu">
-        <!-- Parent Tab -->
         <button class="nav-btn active" data-view="metas">
           <i data-lucide="layers"></i>
           <span>Meta Products</span>
         </button>
 
-        <!-- Nested Child Navigation Section -->
         <div class="nav-child-group" id="nav-child-group">
           <div class="nav-child-label">ACTIVE PRODUCT WORKSPACE</div>
           <button class="nav-btn child-btn" data-view="features">
@@ -129,7 +127,6 @@
             </div>
           </div>
 
-          <!-- Shortcuts Legend Bar -->
           <ul class="keys-legend" aria-label="Keyboard shortcuts">
             <li><kbd>Enter</kbd> Add item below</li>
             <li><kbd>Tab</kbd> Nest item</li>
@@ -143,7 +140,7 @@
           </div>
         </section>
 
-        <!-- View 2: Feature Detail Edit Drawer/Modal -->
+        <!-- View 2: Feature Detail Edit Drawer -->
         <div class="drawer-backdrop" id="drawer-backdrop"></div>
         <aside class="drawer" id="feature-drawer">
           <div class="drawer-header">
@@ -209,7 +206,6 @@
             </button>
           </div>
 
-          <!-- Constraint Filter Toolbar -->
           <div class="filter-bar">
             <input type="text" id="search-constraints" placeholder="Search constraints by feature or keyword..." class="form-control search-input" />
             <select id="filter-type" class="form-control select-filter">
@@ -238,7 +234,7 @@
           </div>
         </section>
 
-        <!-- View 4: Model Testing -->
+        <!-- View 4: Model Testing Engine -->
         <section id="view-test" class="view-panel">
           <div class="view-header">
             <div>
@@ -248,13 +244,13 @@
           </div>
           <div class="test-grid">
             <div class="card test-config-card">
-              <h3>Product Configurator</h3>
+              <h3>Product Configurator Options</h3>
               <div id="test-form-container">
                 <!-- Dynamically generated test inputs -->
               </div>
             </div>
             <div class="card test-eval-card">
-              <h3>Live Evaluation Engine</h3>
+              <h3>Live Rules Evaluation Engine</h3>
               <div class="evaluation-status" id="eval-status">
                 <i data-lucide="check-circle" class="status-icon valid"></i>
                 <span>Configuration Valid</span>
@@ -351,7 +347,7 @@
     </div>
   </div>
 
-  <!-- Modal: Create / Edit IF-THEN Rule Constraint -->
+  <!-- Modal: Rule Constraint Writer -->
   <div class="modal-backdrop" id="rule-constraint-modal">
     <div class="modal modal-lg">
       <div class="modal-header">
@@ -362,18 +358,15 @@
         <div class="modal-body">
           <div class="form-group">
             <label for="rule-name">Rule Name / Title *</label>
-            <input type="text" id="rule-name" class="form-control" placeholder="e.g. Coastal Impact Frame Exclusion" required />
+            <input type="text" id="rule-name" class="form-control" placeholder="e.g. Metal Paint Frame Compatibility" required />
           </div>
 
           <div class="rule-builder-box">
-            <!-- IF CONDITION BLOCK -->
             <div class="rule-block-header">IF (Condition)</div>
             <div class="rule-grid">
               <div class="form-group">
                 <label for="rule-if-feature">Condition Feature *</label>
-                <select id="rule-if-feature" class="form-control" required>
-                  <!-- Populated dynamically -->
-                </select>
+                <select id="rule-if-feature" class="form-control" required></select>
               </div>
               <div class="form-group">
                 <label for="rule-if-operator">Operator</label>
@@ -386,7 +379,6 @@
 
             <hr style="margin: 1rem 0; border: 0; border-top: 1px dashed var(--border-color);">
 
-            <!-- THEN ACTION BLOCK -->
             <div class="rule-block-header">THEN (Consequence)</div>
             <div class="rule-grid">
               <div class="form-group">
@@ -398,9 +390,7 @@
               </div>
               <div class="form-group">
                 <label for="rule-then-feature">Target Feature *</label>
-                <select id="rule-then-feature" class="form-control" required>
-                  <!-- Populated dynamically -->
-                </select>
+                <select id="rule-then-feature" class="form-control" required></select>
               </div>
             </div>
           </div>
@@ -425,9 +415,7 @@
         <textarea id="bulk-input" class="form-control" rows="6" placeholder="Satin Nickel, Matte Black, Oil Rubbed Bronze, Polished Chrome"></textarea>
         <div class="form-group mt-3" style="margin-top: 1rem;">
           <label for="bulk-parent-select">Add under parent category:</label>
-          <select id="bulk-parent-select" class="form-control">
-            <!-- Rendered dynamically -->
-          </select>
+          <select id="bulk-parent-select" class="form-control"></select>
         </div>
       </div>
       <div class="modal-footer">

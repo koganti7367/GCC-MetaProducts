@@ -69,6 +69,44 @@ const state = {
           ]
         },
         {
+          id: 'f-paint',
+          name: 'Paint',
+          kind: 'boolean',
+          required: false,
+          children: [
+            {
+              id: 'f-paint-metal',
+              name: 'Metal paints',
+              kind: 'boolean',
+              children: [
+                { id: 'f-pm-1', name: 'Mp_Black', kind: 'boolean' },
+                { id: 'f-pm-2', name: 'Mp_blue', kind: 'boolean' },
+                { id: 'f-pm-3', name: 'Mp_green', kind: 'boolean' }
+              ]
+            },
+            {
+              id: 'f-paint-color',
+              name: 'Color paints',
+              kind: 'boolean',
+              children: [
+                { id: 'f-pc-1', name: 'Red', kind: 'boolean' },
+                { id: 'f-pc-2', name: 'Yellow', kind: 'boolean' },
+                { id: 'f-pc-3', name: 'Orange', kind: 'boolean' }
+              ]
+            },
+            {
+              id: 'f-paint-stain',
+              name: 'Stains',
+              kind: 'boolean',
+              children: [
+                { id: 'f-ps-1', name: 'Stain_Black', kind: 'boolean' },
+                { id: 'f-ps-2', name: 'Stain_Brown', kind: 'boolean' },
+                { id: 'f-ps-3', name: 'Stain_Grey', kind: 'boolean' }
+              ]
+            }
+          ]
+        },
+        {
           id: 'f3',
           name: 'Hardware & Locksets',
           kind: 'boolean',
@@ -90,14 +128,25 @@ const state = {
       constraints: [
         {
           id: 'c1',
-          name: 'Coastal Impact Frame Requirement',
+          name: 'Coastal Impact Solid Oak Restriction',
           type: 'rule',
-          affectedFeatures: ['HVHZ Coastal Impact Rated', 'Material'],
+          affectedFeatures: ['HVHZ Coastal Impact Rated', 'Solid Oak'],
           ifFeature: 'HVHZ Coastal Impact Rated',
           ifOperator: 'equals',
           thenAction: 'exclude',
           thenFeature: 'Solid Oak',
           logic: 'IF HVHZ Coastal Impact Rated == Selected THEN Solid Oak CANNOT BE Selected'
+        },
+        {
+          id: 'c2',
+          name: 'Solid Oak Metal Paint Restriction',
+          type: 'rule',
+          affectedFeatures: ['Solid Oak', 'Metal paints'],
+          ifFeature: 'Solid Oak',
+          ifOperator: 'equals',
+          thenAction: 'exclude',
+          thenFeature: 'Metal paints',
+          logic: 'IF Material == Solid Oak THEN Metal paints CANNOT BE Selected'
         }
       ]
     }
@@ -155,7 +204,6 @@ function initLucideIcons() {
   }
 }
 
-// Navigation Handler with Parent & Nested Workspace Tab Support
 function setupNavigation() {
   const navButtons = document.querySelectorAll('.nav-btn');
   navButtons.forEach(btn => {
@@ -180,6 +228,7 @@ function setupNavigation() {
       if (targetView === 'metas') renderMetaProductsTable();
       if (targetView === 'features') renderFeatureTree();
       if (targetView === 'constraints') renderConstraintsTable();
+      if (targetView === 'test') setupTestingEngine();
     });
   });
 }
@@ -191,15 +240,11 @@ function updateHeaderBreadcrumb() {
 
   if (prodHeaderEl) prodHeaderEl.textContent = prod.name;
   if (activeModelLabel) activeModelLabel.textContent = prod.name;
-  
-  const treeHeading = document.getElementById('feature-tree-heading');
-  if (treeHeading) treeHeading.textContent = `${prod.name} - Feature Hierarchy`;
 
   const badgeCount = document.getElementById('badge-constraint-count');
   if (badgeCount) badgeCount.textContent = prod.constraints ? prod.constraints.length : 0;
 }
 
-// Render Meta Products Catalog Table
 function renderMetaProductsTable() {
   const tbody = document.getElementById('tbody-metas');
   if (!tbody) return;
@@ -227,11 +272,9 @@ function renderMetaProductsTable() {
 
 function openProduct(productId) {
   state.activeModelId = productId;
-  const prod = getActiveProduct();
 
   updateHeaderBreadcrumb();
 
-  // Activate "Feature Hierarchy" Child Tab
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const featBtn = document.querySelector('.nav-btn[data-view="features"]');
   if (featBtn) featBtn.classList.add('active');
@@ -292,7 +335,6 @@ function setupHeaderCreateButton() {
   }
 }
 
-// Flatten all feature nodes for selection dropdowns
 function getAllFlatFeatures(nodes, result = []) {
   nodes.forEach(n => {
     result.push(n);
@@ -303,7 +345,6 @@ function getAllFlatFeatures(nodes, result = []) {
   return result;
 }
 
-// Rule Constraint Writer Modal Logic
 function setupRuleConstraintModal() {
   const modal = document.getElementById('rule-constraint-modal');
   const btnAddOverview = document.getElementById('btn-add-constraint');
@@ -386,15 +427,10 @@ function setupRuleConstraintModal() {
     setupTestingEngine();
     updateExportCode();
 
-    if (document.getElementById('feature-drawer').classList.contains('open')) {
-      renderDrawerRelatedConstraints(findNodeInTree(state.selectedFeatureId, prod.features)?.node);
-    }
-
     showToast('Rule constraint created successfully.');
   });
 }
 
-// Tree Node Lookup Functions
 function findNodeInTree(id, nodes) {
   for (let i = 0; i < nodes.length; i++) {
     if (nodes[i].id === id) return { node: nodes[i], parent: null, index: i, siblings: nodes };
@@ -417,7 +453,6 @@ function findNodeInTreeSub(id, children, parent) {
   return null;
 }
 
-// Tree Operations: Add, Indent, Outdent, Split
 function addChildNode(id) {
   const prod = getActiveProduct();
   const found = findNodeInTree(id, prod.features);
@@ -509,7 +544,6 @@ function removeNodeFromTree(id) {
   renderFeatureTree();
 }
 
-// Keyboard Listener
 function onNameInputKeydown(e, node) {
   if (e.isComposing) return;
   const val = e.target.value.trim();
@@ -538,7 +572,6 @@ function onNameInputKeydown(e, node) {
   }
 }
 
-// Render Tree DOM
 function renderFeatureTree() {
   const container = document.getElementById('feature-tree');
   if (!container) return;
@@ -592,7 +625,6 @@ function createTreeNodeDOM(node, isRoot = false) {
   grip.onpointerdown = () => { row.draggable = true; };
   row.appendChild(grip);
 
-  // Chevron expander
   if (hasKids) {
     const chev = document.createElement('button');
     chev.type = 'button';
@@ -609,13 +641,11 @@ function createTreeNodeDOM(node, isRoot = false) {
     row.appendChild(spacer);
   }
 
-  // Kind Icon
   const kindIcon = document.createElement('span');
   kindIcon.className = 'kind-icon';
   kindIcon.innerHTML = `<i data-lucide="${hasKids ? 'folder' : 'file-text'}" class="icon-sm"></i>`;
   row.appendChild(kindIcon);
 
-  // Name Input
   const nameInput = document.createElement('input');
   nameInput.type = 'text';
   nameInput.className = 'name-input';
@@ -632,14 +662,12 @@ function createTreeNodeDOM(node, isRoot = false) {
   nameInput.onkeydown = (e) => onNameInputKeydown(e, node);
   row.appendChild(nameInput);
 
-  // Badges
   const badges = document.createElement('span');
   badges.className = 'badges';
   if (isSelection) badges.innerHTML += `<span class="tree-tag sel">Selection</span>`;
   if (node.required) badges.innerHTML += `<span class="tree-tag req">Req</span>`;
   row.appendChild(badges);
 
-  // Action Buttons
   const actions = document.createElement('span');
   actions.className = 'actions';
 
@@ -670,7 +698,6 @@ function createTreeNodeDOM(node, isRoot = false) {
   row.appendChild(actions);
   li.appendChild(row);
 
-  // Children nested list
   if (hasKids && !node.collapsed) {
     const kidsUl = document.createElement('ul');
     kidsUl.className = 'kids';
@@ -683,7 +710,7 @@ function createTreeNodeDOM(node, isRoot = false) {
   return li;
 }
 
-// Drawer & Constraints Logic
+// Drawer & Constraints
 function openDetailDrawer(featureId) {
   state.selectedFeatureId = featureId;
   const prod = getActiveProduct();
@@ -845,44 +872,52 @@ function setupBulkModal() {
   }
 }
 
+// Model Testing Engine with Live Constraint Evaluation
 function setupTestingEngine() {
   const container = document.getElementById('test-form-container');
   if (!container) return;
   container.innerHTML = '';
   const prod = getActiveProduct();
 
-  prod.features.forEach(cat => {
+  prod.features.forEach(rootFeature => {
+    renderTestingFormInputs(rootFeature, container);
+  });
+
+  runTestEngineValidation();
+}
+
+function renderTestingFormInputs(node, container) {
+  if (node.children && node.children.length > 0) {
     const group = document.createElement('div');
     group.className = 'form-group';
-    group.innerHTML = `<label>${cat.name}</label>`;
+    group.innerHTML = `<label><strong>${node.name}</strong></label>`;
 
     const select = document.createElement('select');
     select.className = 'form-control test-select';
+    select.dataset.featureName = node.name;
 
-    if (cat.children) {
-      cat.children.forEach(sub => {
-        if (sub.children) {
-          sub.children.forEach(opt => {
-            const el = document.createElement('option');
-            el.value = opt.name;
-            el.textContent = `${sub.name}: ${opt.name}`;
-            select.appendChild(el);
-          });
-        } else {
-          const el = document.createElement('option');
-          el.value = sub.name;
-          el.textContent = sub.name;
-          select.appendChild(el);
-        }
-      });
-    }
+    select.appendChild(new Option('-- None Selected --', ''));
+
+    node.children.forEach(child => {
+      const opt = document.createElement('option');
+      opt.value = child.name;
+      opt.textContent = child.name;
+      select.appendChild(opt);
+
+      if (child.children && child.children.length > 0) {
+        child.children.forEach(grandChild => {
+          const opt2 = document.createElement('option');
+          opt2.value = grandChild.name;
+          opt2.textContent = `${child.name} ➔ ${grandChild.name}`;
+          select.appendChild(opt2);
+        });
+      }
+    });
 
     select.addEventListener('change', runTestEngineValidation);
     group.appendChild(select);
     container.appendChild(group);
-  });
-
-  runTestEngineValidation();
+  }
 }
 
 function runTestEngineValidation() {
@@ -891,18 +926,31 @@ function runTestEngineValidation() {
   log.innerHTML = '';
   const prod = getActiveProduct();
 
-  const selectedValues = Array.from(document.querySelectorAll('.test-select')).map(s => s.value);
+  const selectedValues = Array.from(document.querySelectorAll('.test-select')).map(s => s.value).filter(Boolean);
 
   let hasConflict = false;
 
   if (prod.constraints) {
     prod.constraints.forEach(c => {
       const li = document.createElement('li');
+      li.style.marginBottom = '6px';
+      li.style.fontSize = '0.85rem';
 
-      if (selectedValues.includes('HVHZ Coastal Impact Rated') && selectedValues.includes('Solid Oak')) {
+      const ifMatched = selectedValues.includes(c.ifFeature);
+      const thenMatched = selectedValues.includes(c.thenFeature);
+
+      let isViolated = false;
+
+      if (c.ifOperator === 'equals' && ifMatched) {
+        if (c.thenAction === 'exclude' && thenMatched) {
+          isViolated = true;
+        }
+      }
+
+      if (isViolated) {
         hasConflict = true;
         li.style.color = '#ef4444';
-        li.textContent = `❌ Constraint Violated [${c.name}]: ${c.logic}`;
+        li.textContent = `❌ Rule Conflict [${c.name}]: ${c.logic}`;
       } else {
         li.style.color = '#10b981';
         li.textContent = `✔ Rule Passed [${c.name}]`;
