@@ -37,7 +37,7 @@ body {
   height: 100vh;
 }
 
-/* Sidebar Navigation - Parent & Child Hierarchy */
+/* Sidebar */
 .sidebar {
   width: 260px;
   background-color: var(--sidebar-bg);
@@ -106,7 +106,6 @@ body {
   color: #fff;
 }
 
-/* Child Navigation Section */
 .nav-child-group {
   margin-top: 12px;
   padding-left: 12px;
@@ -310,7 +309,7 @@ kbd {
   color: var(--text-main);
 }
 
-/* Interactive Keyboard Tree Styling */
+/* Tree Styling */
 .tree-container {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
@@ -346,10 +345,6 @@ li.tree-item {
 
 .tree-row:hover, .tree-row:focus-within {
   background: #f8fafc;
-}
-
-.tree-row.root-row {
-  padding: 8px 6px;
 }
 
 .grip {
@@ -485,7 +480,6 @@ input.name-input:focus {
   color: var(--text-muted);
 }
 
-/* Drawer Section Titles */
 .section-title-row {
   display: flex;
   justify-content: space-between;
@@ -493,7 +487,6 @@ input.name-input:focus {
   margin-bottom: 8px;
 }
 
-/* Rule Builder Modal Styling */
 .modal.modal-lg {
   width: 620px;
 }
@@ -673,7 +666,7 @@ input.name-input:focus {
   cursor: pointer;
 }
 
-/* Testing Engine */
+/* Testing Engine Grid */
 .test-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
