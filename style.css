@@ -697,3 +697,8 @@ input.name-input:focus {
   align-items: center;
   margin-bottom: 12px;
 }
+
+.disabled-option {
+  color: #94a3b8;
+  background-color: #f1f5f9;
+}

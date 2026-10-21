@@ -872,7 +872,7 @@ function setupBulkModal() {
   }
 }
 
-// Model Testing Engine with Live Constraint Evaluation
+// Model Testing Engine with Dynamic Interactive Option Disabling
 function setupTestingEngine() {
   const container = document.getElementById('test-form-container');
   if (!container) return;
@@ -890,18 +890,20 @@ function renderTestingFormInputs(node, container) {
   if (node.children && node.children.length > 0) {
     const group = document.createElement('div');
     group.className = 'form-group';
+    group.dataset.featureName = node.name;
     group.innerHTML = `<label><strong>${node.name}</strong></label>`;
 
     const select = document.createElement('select');
     select.className = 'form-control test-select';
     select.dataset.featureName = node.name;
 
-    select.appendChild(new Option('-- None Selected --', ''));
+    select.appendChild(new Option('-- Select Option --', ''));
 
     node.children.forEach(child => {
       const opt = document.createElement('option');
       opt.value = child.name;
       opt.textContent = child.name;
+      opt.dataset.nodeName = child.name;
       select.appendChild(opt);
 
       if (child.children && child.children.length > 0) {
@@ -909,6 +911,8 @@ function renderTestingFormInputs(node, container) {
           const opt2 = document.createElement('option');
           opt2.value = grandChild.name;
           opt2.textContent = `${child.name} ➔ ${grandChild.name}`;
+          opt2.dataset.nodeName = grandChild.name;
+          opt2.dataset.parentName = child.name;
           select.appendChild(opt2);
         });
       }
@@ -926,7 +930,19 @@ function runTestEngineValidation() {
   log.innerHTML = '';
   const prod = getActiveProduct();
 
-  const selectedValues = Array.from(document.querySelectorAll('.test-select')).map(s => s.value).filter(Boolean);
+  const selects = Array.from(document.querySelectorAll('.test-select'));
+  const selectedValues = selects.map(s => s.value).filter(Boolean);
+
+  // Reset all option enabled states
+  selects.forEach(s => {
+    Array.from(s.options).forEach(opt => {
+      opt.disabled = false;
+      opt.classList.remove('disabled-option');
+      if (opt.dataset.originalLabel) {
+        opt.textContent = opt.dataset.originalLabel;
+      }
+    });
+  });
 
   let hasConflict = false;
 
@@ -937,23 +953,34 @@ function runTestEngineValidation() {
       li.style.fontSize = '0.85rem';
 
       const ifMatched = selectedValues.includes(c.ifFeature);
-      const thenMatched = selectedValues.includes(c.thenFeature);
 
-      let isViolated = false;
-
+      // Check if IF condition triggers restriction
       if (c.ifOperator === 'equals' && ifMatched) {
-        if (c.thenAction === 'exclude' && thenMatched) {
-          isViolated = true;
-        }
-      }
+        // Disable target options dynamically
+        selects.forEach(s => {
+          Array.from(s.options).forEach(opt => {
+            const isTargetFeature = opt.dataset.nodeName === c.thenFeature || 
+                                    opt.dataset.parentName === c.thenFeature || 
+                                    opt.value === c.thenFeature;
+            if (isTargetFeature) {
+              opt.disabled = true;
+              opt.classList.add('disabled-option');
+              if (!opt.dataset.originalLabel) opt.dataset.originalLabel = opt.textContent;
+              opt.textContent = `${opt.dataset.originalLabel} [DISABLED BY RULE]`;
 
-      if (isViolated) {
-        hasConflict = true;
+              if (s.value === opt.value) {
+                s.value = '';
+                hasConflict = true;
+              }
+            }
+          });
+        });
+
         li.style.color = '#ef4444';
-        li.textContent = `❌ Rule Conflict [${c.name}]: ${c.logic}`;
+        li.textContent = `🚫 Rule Enforced [${c.name}]: ${c.thenFeature} options disabled because ${c.ifFeature} is selected.`;
       } else {
         li.style.color = '#10b981';
-        li.textContent = `✔ Rule Passed [${c.name}]`;
+        li.textContent = `✔ Rule Active [${c.name}]`;
       }
       log.appendChild(li);
     });
@@ -962,7 +989,7 @@ function runTestEngineValidation() {
   const statusEl = document.getElementById('eval-status');
   if (statusEl) {
     if (hasConflict) {
-      statusEl.innerHTML = '<span style="color:#ef4444; font-weight:bold;">❌ Invalid Combination Detected</span>';
+      statusEl.innerHTML = '<span style="color:#ef4444; font-weight:bold;">⚠️ Selection Conflict Resolved (Rule Enforced)</span>';
     } else {
       statusEl.innerHTML = '<span style="color:#10b981; font-weight:bold;">✔ Valid Configuration</span>';
     }
