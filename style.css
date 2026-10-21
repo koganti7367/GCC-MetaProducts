@@ -37,7 +37,7 @@ body {
   height: 100vh;
 }
 
-/* Sidebar */
+/* Sidebar Navigation - Parent & Child Hierarchy */
 .sidebar {
   width: 260px;
   background-color: var(--sidebar-bg);
@@ -106,6 +106,29 @@ body {
   color: #fff;
 }
 
+/* Child Navigation Section */
+.nav-child-group {
+  margin-top: 12px;
+  padding-left: 12px;
+  border-left: 2px solid #334155;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-child-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  margin: 6px 0 4px 6px;
+}
+
+.nav-btn.child-btn {
+  font-size: 0.85rem;
+  padding: 8px 12px;
+}
+
 .badge {
   margin-left: auto;
   background-color: var(--badge-bg);
@@ -149,12 +172,13 @@ body {
 }
 
 .header-breadcrumbs {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   color: var(--text-muted);
 }
 
 .header-breadcrumbs strong {
-  color: var(--text-main);
+  color: var(--primary);
+  font-weight: 600;
 }
 
 .header-actions {
@@ -264,6 +288,11 @@ kbd {
   background-color: #f8fafc;
 }
 
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 0.775rem;
+}
+
 .btn-icon {
   background: transparent;
   border: none;
@@ -305,10 +334,6 @@ li.tree-item {
   position: relative;
 }
 
-li.dragging {
-  opacity: 0.4;
-}
-
 .tree-row {
   position: relative;
   display: flex;
@@ -343,10 +368,6 @@ li.dragging {
   opacity: 1;
 }
 
-.grip:active {
-  cursor: grabbing;
-}
-
 .spacer {
   width: 18px;
   flex: none;
@@ -364,10 +385,6 @@ li.dragging {
   display: grid;
   place-items: center;
   padding: 0;
-}
-
-.chev:hover {
-  background: var(--border-color);
 }
 
 .chev.collapsed {
@@ -393,19 +410,9 @@ input.name-input {
   border-radius: 6px;
 }
 
-input.name-input::placeholder {
-  color: var(--text-muted);
-  opacity: 0.7;
-}
-
 input.name-input:focus {
   background: #ffffff;
   outline: 2px solid var(--primary);
-}
-
-.tree-row.root-row input.name-input {
-  font-size: 1.15rem;
-  font-weight: 700;
 }
 
 .badges {
@@ -452,23 +459,6 @@ input.name-input:focus {
   opacity: 1;
 }
 
-/* Drag states */
-.tree-row.drop-before::before, .tree-row.drop-after::after, .tree-row.drop-first::after {
-  content: "";
-  position: absolute;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--primary);
-  left: 0;
-  right: 0;
-  pointer-events: none;
-}
-
-.tree-row.drop-before::before { top: -2px; }
-.tree-row.drop-after::after { bottom: -2px; }
-.tree-row.drop-first::after { bottom: -2px; left: 28px; }
-.tree-row.drop-into { background: #eff6ff; outline: 2px solid var(--primary); }
-
 /* Tables */
 .constraint-table-wrapper {
   background: white;
@@ -495,18 +485,39 @@ input.name-input:focus {
   color: var(--text-muted);
 }
 
-/* Cards & Testing View */
-.card {
-  background: white;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  padding: 20px;
+/* Drawer Section Titles */
+.section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
-.test-grid {
+/* Rule Builder Modal Styling */
+.modal.modal-lg {
+  width: 620px;
+}
+
+.rule-builder-box {
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 12px;
+}
+
+.rule-block-header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.rule-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 12px;
 }
 
 /* Forms */
@@ -535,13 +546,8 @@ input.name-input:focus {
   margin-bottom: 16px;
 }
 
-.search-input {
-  max-width: 360px;
-}
-
-.select-filter {
-  width: 180px;
-}
+.search-input { max-width: 360px; }
+.select-filter { width: 180px; }
 
 /* Drawer Component */
 .drawer-backdrop {
@@ -556,7 +562,7 @@ input.name-input:focus {
   position: fixed;
   top: 0;
   right: -420px;
-  width: 400px;
+  width: 420px;
   height: 100%;
   background: white;
   box-shadow: -4px 0 16px rgba(0,0,0,0.1);
@@ -667,7 +673,20 @@ input.name-input:focus {
   cursor: pointer;
 }
 
-/* Code Preview */
+/* Testing Engine */
+.test-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.card {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
 .code-preview {
   background: #0f172a;
   color: #38bdf8;

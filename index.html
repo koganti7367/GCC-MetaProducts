@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Entry Door Meta-Product Builder</title>
+  <title>MetaBuilder CPQ Engine</title>
   <link rel="stylesheet" href="style.css">
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
   <div class="app-container">
-    <!-- Sidebar Navigation -->
+    <!-- Sidebar Navigation with Parent / Child Hierarchy -->
     <aside class="sidebar">
       <div class="brand">
         <i data-lucide="door-open" class="brand-icon"></i>
@@ -21,36 +21,42 @@
       </div>
 
       <nav class="nav-menu">
+        <!-- Parent Tab -->
         <button class="nav-btn active" data-view="metas">
           <i data-lucide="layers"></i>
           <span>Meta Products</span>
         </button>
-        <button class="nav-btn" data-view="features">
-          <i data-lucide="folder-tree"></i>
-          <span>Feature Hierarchy</span>
-        </button>
-        <button class="nav-btn" data-view="constraints">
-          <i data-lucide="shield-alert"></i>
-          <span>Constraints Overview</span>
-          <span class="badge" id="badge-constraint-count">5</span>
-        </button>
-        <button class="nav-btn" data-view="test">
-          <i data-lucide="play-circle"></i>
-          <span>Model Testing</span>
-        </button>
-        <button class="nav-btn" data-view="autobahn">
-          <i data-lucide="settings"></i>
-          <span>Autobahn Setup</span>
-        </button>
-        <button class="nav-btn" data-view="export">
-          <i data-lucide="download"></i>
-          <span>Export Product</span>
-        </button>
+
+        <!-- Nested Child Navigation Section -->
+        <div class="nav-child-group" id="nav-child-group">
+          <div class="nav-child-label">ACTIVE PRODUCT WORKSPACE</div>
+          <button class="nav-btn child-btn" data-view="features">
+            <i data-lucide="folder-tree"></i>
+            <span>Feature Hierarchy</span>
+          </button>
+          <button class="nav-btn child-btn" data-view="constraints">
+            <i data-lucide="shield-alert"></i>
+            <span>Constraints Overview</span>
+            <span class="badge" id="badge-constraint-count">0</span>
+          </button>
+          <button class="nav-btn child-btn" data-view="test">
+            <i data-lucide="play-circle"></i>
+            <span>Model Testing</span>
+          </button>
+          <button class="nav-btn child-btn" data-view="autobahn">
+            <i data-lucide="settings"></i>
+            <span>Autobahn Setup</span>
+          </button>
+          <button class="nav-btn child-btn" data-view="export">
+            <i data-lucide="download"></i>
+            <span>Export Product</span>
+          </button>
+        </div>
       </nav>
 
       <div class="sidebar-footer">
         <div class="product-info">
-          <span class="label">Active Model:</span>
+          <span class="label">Editing Product:</span>
           <strong class="value" id="active-model-label">Entry Door System v2.4</strong>
         </div>
       </div>
@@ -61,7 +67,7 @@
       <!-- Top Navigation Header -->
       <header class="top-header">
         <div class="header-breadcrumbs" id="breadcrumbs">
-          <span>Meta-Product</span> / <strong id="current-view-title">Meta Products</strong>
+          <span>Meta Products</span> / <strong id="active-product-header-title">Entry Door System v2.4</strong> / <span id="current-view-title">Meta Products Catalog</span>
         </div>
         <div class="header-actions">
           <button class="btn btn-primary" id="btn-create-meta-header">
@@ -110,7 +116,7 @@
         <section id="view-features" class="view-panel">
           <div class="view-header">
             <div>
-              <h2>Primary Feature Hierarchy</h2>
+              <h2 id="feature-tree-heading">Primary Feature Hierarchy</h2>
               <p class="subtitle">Organize, rename, and structure your product options & configurations.</p>
             </div>
             <div class="toolbar">
@@ -173,7 +179,12 @@
               <hr style="margin: 1rem 0; border: 0; border-top: 1px solid var(--border-color);">
 
               <div class="related-constraints-section">
-                <h4>Referenced Constraints</h4>
+                <div class="section-title-row">
+                  <h4>Referenced Constraints</h4>
+                  <button type="button" class="btn btn-outline btn-sm" id="btn-add-rule-from-drawer">
+                    <i data-lucide="plus"></i> Add Rule Constraint
+                  </button>
+                </div>
                 <div id="drawer-related-constraints" class="constraint-chip-list">
                   <!-- Populated dynamically -->
                 </div>
@@ -194,7 +205,7 @@
               <p class="subtitle">Manage business logic, required selections, blacklists, and whitelists.</p>
             </div>
             <button class="btn btn-primary" id="btn-add-constraint">
-              <i data-lucide="shield-plus"></i> Create Constraint
+              <i data-lucide="shield-plus"></i> Create Constraint Rule
             </button>
           </div>
 
@@ -335,6 +346,68 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" id="btn-cancel-create-meta">Cancel</button>
           <button type="submit" class="btn btn-primary">Create & Configure</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Create / Edit IF-THEN Rule Constraint -->
+  <div class="modal-backdrop" id="rule-constraint-modal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3>Rule Constraint Writer (IF / THEN Logic)</h3>
+        <button class="btn-icon" id="btn-close-rule-modal"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-rule-constraint">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="rule-name">Rule Name / Title *</label>
+            <input type="text" id="rule-name" class="form-control" placeholder="e.g. Coastal Impact Frame Exclusion" required />
+          </div>
+
+          <div class="rule-builder-box">
+            <!-- IF CONDITION BLOCK -->
+            <div class="rule-block-header">IF (Condition)</div>
+            <div class="rule-grid">
+              <div class="form-group">
+                <label for="rule-if-feature">Condition Feature *</label>
+                <select id="rule-if-feature" class="form-control" required>
+                  <!-- Populated dynamically -->
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="rule-if-operator">Operator</label>
+                <select id="rule-if-operator" class="form-control">
+                  <option value="equals">is selected / equals</option>
+                  <option value="not_equals">is NOT selected / not equal</option>
+                </select>
+              </div>
+            </div>
+
+            <hr style="margin: 1rem 0; border: 0; border-top: 1px dashed var(--border-color);">
+
+            <!-- THEN ACTION BLOCK -->
+            <div class="rule-block-header">THEN (Consequence)</div>
+            <div class="rule-grid">
+              <div class="form-group">
+                <label for="rule-then-action">Consequence Action</label>
+                <select id="rule-then-action" class="form-control">
+                  <option value="exclude">CANNOT BE / EXCLUDE</option>
+                  <option value="require">MUST BE / REQUIRE</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="rule-then-feature">Target Feature *</label>
+                <select id="rule-then-feature" class="form-control" required>
+                  <!-- Populated dynamically -->
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-rule-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Rule Constraint</button>
         </div>
       </form>
     </div>

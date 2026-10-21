@@ -1,9 +1,7 @@
-// Multi-Product Meta-Product Data Store with Keyboard Tree Support
+// Multi-Product Meta-Product Data Store
 const state = {
   activeModelId: 'door-001',
   focusSel: null,
-  dragId: null,
-  dropRow: null,
   products: [
     {
       id: 'door-001',
@@ -95,7 +93,11 @@ const state = {
           name: 'Coastal Impact Frame Requirement',
           type: 'rule',
           affectedFeatures: ['HVHZ Coastal Impact Rated', 'Material'],
-          logic: 'IF Glazing == "HVHZ Coastal Impact Rated" THEN Material CANNOT BE "Solid Oak"'
+          ifFeature: 'HVHZ Coastal Impact Rated',
+          ifOperator: 'equals',
+          thenAction: 'exclude',
+          thenFeature: 'Solid Oak',
+          logic: 'IF HVHZ Coastal Impact Rated == Selected THEN Solid Oak CANNOT BE Selected'
         }
       ]
     }
@@ -139,10 +141,12 @@ document.addEventListener('DOMContentLoaded', () => {
   renderFeatureTree();
   renderConstraintsTable();
   setupDrawerEvents();
+  setupRuleConstraintModal();
   setupBulkModal();
   setupTestingEngine();
   setupHeaderCreateButton();
   updateExportCode();
+  updateHeaderBreadcrumb();
 });
 
 function initLucideIcons() {
@@ -151,11 +155,13 @@ function initLucideIcons() {
   }
 }
 
+// Navigation Handler with Parent & Nested Workspace Tab Support
 function setupNavigation() {
   const navButtons = document.querySelectorAll('.nav-btn');
   navButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const targetView = btn.getAttribute('data-view');
+      
       navButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
@@ -169,12 +175,31 @@ function setupNavigation() {
       const viewTitle = btn.querySelector('span').textContent;
       document.getElementById('current-view-title').textContent = viewTitle;
 
+      updateHeaderBreadcrumb();
+
       if (targetView === 'metas') renderMetaProductsTable();
       if (targetView === 'features') renderFeatureTree();
+      if (targetView === 'constraints') renderConstraintsTable();
     });
   });
 }
 
+function updateHeaderBreadcrumb() {
+  const prod = getActiveProduct();
+  const prodHeaderEl = document.getElementById('active-product-header-title');
+  const activeModelLabel = document.getElementById('active-model-label');
+
+  if (prodHeaderEl) prodHeaderEl.textContent = prod.name;
+  if (activeModelLabel) activeModelLabel.textContent = prod.name;
+  
+  const treeHeading = document.getElementById('feature-tree-heading');
+  if (treeHeading) treeHeading.textContent = `${prod.name} - Feature Hierarchy`;
+
+  const badgeCount = document.getElementById('badge-constraint-count');
+  if (badgeCount) badgeCount.textContent = prod.constraints ? prod.constraints.length : 0;
+}
+
+// Render Meta Products Catalog Table
 function renderMetaProductsTable() {
   const tbody = document.getElementById('tbody-metas');
   if (!tbody) return;
@@ -203,11 +228,13 @@ function renderMetaProductsTable() {
 function openProduct(productId) {
   state.activeModelId = productId;
   const prod = getActiveProduct();
-  
-  document.getElementById('active-model-label').textContent = prod.name;
 
+  updateHeaderBreadcrumb();
+
+  // Activate "Feature Hierarchy" Child Tab
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('.nav-btn[data-view="features"]').classList.add('active');
+  const featBtn = document.querySelector('.nav-btn[data-view="features"]');
+  if (featBtn) featBtn.classList.add('active');
 
   document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
   document.getElementById('view-features').classList.add('active');
@@ -219,7 +246,6 @@ function openProduct(productId) {
   updateExportCode();
 }
 
-// Modal Pop-Up Header Create Meta Product Button
 function setupHeaderCreateButton() {
   const btnCreateHeader = document.getElementById('btn-create-meta-header');
   const modal = document.getElementById('create-meta-modal');
@@ -264,6 +290,108 @@ function setupHeaderCreateButton() {
       openProduct(newId);
     });
   }
+}
+
+// Flatten all feature nodes for selection dropdowns
+function getAllFlatFeatures(nodes, result = []) {
+  nodes.forEach(n => {
+    result.push(n);
+    if (n.children && n.children.length > 0) {
+      getAllFlatFeatures(n.children, result);
+    }
+  });
+  return result;
+}
+
+// Rule Constraint Writer Modal Logic
+function setupRuleConstraintModal() {
+  const modal = document.getElementById('rule-constraint-modal');
+  const btnAddOverview = document.getElementById('btn-add-constraint');
+  const btnAddDrawer = document.getElementById('btn-add-rule-from-drawer');
+  const btnClose = document.getElementById('btn-close-rule-modal');
+  const btnCancel = document.getElementById('btn-cancel-rule-modal');
+  const form = document.getElementById('form-rule-constraint');
+
+  const openModal = () => {
+    const prod = getActiveProduct();
+    const flatList = getAllFlatFeatures(prod.features);
+
+    const ifSelect = document.getElementById('rule-if-feature');
+    const thenSelect = document.getElementById('rule-then-feature');
+
+    ifSelect.innerHTML = '';
+    thenSelect.innerHTML = '';
+
+    flatList.forEach(f => {
+      const opt1 = document.createElement('option');
+      opt1.value = f.name;
+      opt1.textContent = f.name;
+      ifSelect.appendChild(opt1);
+
+      const opt2 = document.createElement('option');
+      opt2.value = f.name;
+      opt2.textContent = f.name;
+      thenSelect.appendChild(opt2);
+    });
+
+    if (state.selectedFeatureId) {
+      const found = findNodeInTree(state.selectedFeatureId, prod.features);
+      if (found) {
+        ifSelect.value = found.node.name;
+      }
+    }
+
+    form.reset();
+    modal.classList.add('open');
+  };
+
+  const closeModal = () => modal.classList.remove('open');
+
+  if (btnAddOverview) btnAddOverview.addEventListener('click', openModal);
+  if (btnAddDrawer) btnAddDrawer.addEventListener('click', openModal);
+  if (btnClose) btnClose.addEventListener('click', closeModal);
+  if (btnCancel) btnCancel.addEventListener('click', closeModal);
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const prod = getActiveProduct();
+    const name = document.getElementById('rule-name').value.trim();
+    const ifFeature = document.getElementById('rule-if-feature').value;
+    const ifOp = document.getElementById('rule-if-operator').value;
+    const thenAction = document.getElementById('rule-then-action').value;
+    const thenFeature = document.getElementById('rule-then-feature').value;
+
+    const opText = ifOp === 'equals' ? 'Selected' : 'Not Selected';
+    const actionText = thenAction === 'exclude' ? 'CANNOT BE Selected' : 'MUST BE Selected';
+    const logicSummary = `IF ${ifFeature} == ${opText} THEN ${thenFeature} ${actionText}`;
+
+    const newConstraint = {
+      id: 'c-' + Date.now(),
+      name,
+      type: 'rule',
+      affectedFeatures: [ifFeature, thenFeature],
+      ifFeature,
+      ifOperator: ifOp,
+      thenAction,
+      thenFeature,
+      logic: logicSummary
+    };
+
+    if (!prod.constraints) prod.constraints = [];
+    prod.constraints.push(newConstraint);
+
+    closeModal();
+    updateHeaderBreadcrumb();
+    renderConstraintsTable();
+    setupTestingEngine();
+    updateExportCode();
+
+    if (document.getElementById('feature-drawer').classList.contains('open')) {
+      renderDrawerRelatedConstraints(findNodeInTree(state.selectedFeatureId, prod.features)?.node);
+    }
+
+    showToast('Rule constraint created successfully.');
+  });
 }
 
 // Tree Node Lookup Functions
@@ -555,7 +683,7 @@ function createTreeNodeDOM(node, isRoot = false) {
   return li;
 }
 
-// Drawer & Constraints
+// Drawer & Constraints Logic
 function openDetailDrawer(featureId) {
   state.selectedFeatureId = featureId;
   const prod = getActiveProduct();
@@ -567,11 +695,33 @@ function openDetailDrawer(featureId) {
   document.getElementById('detail-type').value = feature.kind || 'choice';
   document.getElementById('detail-required').checked = !!feature.required;
 
+  renderDrawerRelatedConstraints(feature);
+
   const drawer = document.getElementById('feature-drawer');
   const backdrop = document.getElementById('drawer-backdrop');
 
   drawer.classList.add('open');
   backdrop.classList.add('open');
+}
+
+function renderDrawerRelatedConstraints(feature) {
+  if (!feature) return;
+  const prod = getActiveProduct();
+  const chipContainer = document.getElementById('drawer-related-constraints');
+  chipContainer.innerHTML = '';
+
+  const related = prod.constraints ? prod.constraints.filter(c => c.affectedFeatures.includes(feature.name)) : [];
+
+  if (related.length === 0) {
+    chipContainer.innerHTML = '<span class="text-muted" style="color:var(--text-muted); font-size:0.85rem;">No rules directly affect this feature.</span>';
+  } else {
+    related.forEach(r => {
+      const chip = document.createElement('div');
+      chip.className = 'tree-tag';
+      chip.textContent = `${r.type.toUpperCase()}: ${r.name}`;
+      chipContainer.appendChild(chip);
+    });
+  }
 }
 
 function setupDrawerEvents() {
@@ -611,7 +761,12 @@ function renderConstraintsTable() {
   tbody.innerHTML = '';
   const prod = getActiveProduct();
 
-  prod.constraints.forEach(c => {
+  if (!prod.constraints || prod.constraints.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No rules created for this product yet. Click 'Create Constraint Rule' above.</td></tr>`;
+    return;
+  }
+
+  prod.constraints.forEach((c, idx) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><strong>${c.name}</strong></td>
@@ -619,14 +774,25 @@ function renderConstraintsTable() {
       <td>${c.affectedFeatures.map(f => `<span class="constraint-count-badge">${f}</span>`).join(' ')}</td>
       <td><code>${c.logic}</code></td>
       <td>
-        <button class="btn-icon" title="Edit Constraint"><i data-lucide="edit"></i></button>
-        <button class="btn-icon" title="Delete Constraint"><i data-lucide="trash-2"></i></button>
+        <button class="btn-icon" title="Delete Constraint" onclick="deleteConstraint(${idx})"><i data-lucide="trash-2"></i></button>
       </td>
     `;
     tbody.appendChild(tr);
   });
 
   initLucideIcons();
+}
+
+function deleteConstraint(index) {
+  const prod = getActiveProduct();
+  if (prod.constraints && prod.constraints[index]) {
+    prod.constraints.splice(index, 1);
+    updateHeaderBreadcrumb();
+    renderConstraintsTable();
+    setupTestingEngine();
+    updateExportCode();
+    showToast('Rule constraint removed.');
+  }
 }
 
 function setupBulkModal() {
@@ -702,6 +868,11 @@ function setupTestingEngine() {
             el.textContent = `${sub.name}: ${opt.name}`;
             select.appendChild(el);
           });
+        } else {
+          const el = document.createElement('option');
+          el.value = sub.name;
+          el.textContent = sub.name;
+          select.appendChild(el);
         }
       });
     }
@@ -724,26 +895,28 @@ function runTestEngineValidation() {
 
   let hasConflict = false;
 
-  prod.constraints.forEach(c => {
-    const li = document.createElement('li');
+  if (prod.constraints) {
+    prod.constraints.forEach(c => {
+      const li = document.createElement('li');
 
-    if (selectedValues.includes('HVHZ Coastal Impact Rated') && selectedValues.includes('Solid Oak')) {
-      hasConflict = true;
-      li.style.color = '#ef4444';
-      li.textContent = `❌ Constraint Violated [${c.name}]: Solid Oak cannot be combined with HVHZ Coastal Impact glass.`;
-    } else {
-      li.style.color = '#10b981';
-      li.textContent = `✔ Rule Passed [${c.name}]`;
-    }
-    log.appendChild(li);
-  });
+      if (selectedValues.includes('HVHZ Coastal Impact Rated') && selectedValues.includes('Solid Oak')) {
+        hasConflict = true;
+        li.style.color = '#ef4444';
+        li.textContent = `❌ Constraint Violated [${c.name}]: ${c.logic}`;
+      } else {
+        li.style.color = '#10b981';
+        li.textContent = `✔ Rule Passed [${c.name}]`;
+      }
+      log.appendChild(li);
+    });
+  }
 
   const statusEl = document.getElementById('eval-status');
   if (statusEl) {
     if (hasConflict) {
       statusEl.innerHTML = '<span style="color:#ef4444; font-weight:bold;">❌ Invalid Combination Detected</span>';
     } else {
-      statusEl.innerHTML = '<span style="color:#10b981; font-weight:bold;">✔ Valid Entry Door Configuration</span>';
+      statusEl.innerHTML = '<span style="color:#10b981; font-weight:bold;">✔ Valid Configuration</span>';
     }
   }
 }
