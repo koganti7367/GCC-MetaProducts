@@ -1,5 +1,7 @@
-// Multi-Product Meta-Product Data Store
+// Global Custom Commerce Vendor Portal & Meta Products Engine
 const state = {
+  currentPortalTab: 'my-requests',
+  currentMetaSubView: 'metas',
   activeModelId: 'door-001',
   focusSel: null,
   products: [
@@ -128,7 +130,7 @@ const state = {
       constraints: [
         {
           id: 'c1',
-          name: 'Coastal Impact Solid Oak Restriction',
+          name: 'Coastal Impact Frame Restriction',
           type: 'rule',
           affectedFeatures: ['HVHZ Coastal Impact Rated', 'Solid Oak'],
           ifFeature: 'HVHZ Coastal Impact Rated',
@@ -165,19 +167,12 @@ function mkNode(name, extra) {
   return Object.assign({ id: uid(), name: name || '', kind: 'boolean', required: false, children: [], collapsed: false }, extra || {});
 }
 
-// Toast helper
+// Toast notification helper
 let toastTimer = null;
-function showToast(msg, actionLabel, actionFn) {
+function showToast(msg) {
   const toastEl = document.getElementById('toast');
   if (!toastEl) return;
-  toastEl.innerHTML = `<span>${msg}</span>`;
-  if (actionLabel && actionFn) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = actionLabel;
-    btn.onclick = () => { toastEl.classList.remove('show'); actionFn(); };
-    toastEl.appendChild(btn);
-  }
+  toastEl.textContent = msg;
   toastEl.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3500);
@@ -185,7 +180,8 @@ function showToast(msg, actionLabel, actionFn) {
 
 document.addEventListener('DOMContentLoaded', () => {
   initLucideIcons();
-  setupNavigation();
+  setupPortalNavigation();
+  setupMetaSubNavigation();
   renderMetaProductsTable();
   renderFeatureTree();
   renderConstraintsTable();
@@ -195,7 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setupTestingEngine();
   setupHeaderCreateButton();
   updateExportCode();
-  updateHeaderBreadcrumb();
 });
 
 function initLucideIcons() {
@@ -204,47 +199,90 @@ function initLucideIcons() {
   }
 }
 
-function setupNavigation() {
-  const navButtons = document.querySelectorAll('.nav-btn');
-  navButtons.forEach(btn => {
+// Left Navigation: Switching between My Requests, All Requests, and Meta Products (3rd Tab)
+function setupPortalNavigation() {
+  const portalNavBtns = document.querySelectorAll('.portal-nav-btn');
+  const btnNewRequest = document.getElementById('btn-new-request');
+  const btnCreateMeta = document.getElementById('btn-create-meta-header');
+  const metaWorkspaceNav = document.getElementById('meta-workspace-nav');
+
+  portalNavBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      const targetView = btn.getAttribute('data-view');
-      
-      navButtons.forEach(b => b.classList.remove('active'));
+      const view = btn.getAttribute('data-portal-view');
+      state.currentPortalTab = view;
+
+      portalNavBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
-      document.querySelectorAll('.view-panel').forEach(panel => {
-        panel.classList.remove('active');
-      });
+      document.querySelectorAll('.portal-view').forEach(v => v.classList.remove('active'));
+      const activeView = document.getElementById(`view-${view}`);
+      if (activeView) activeView.classList.add('active');
 
-      const activePanel = document.getElementById(`view-${targetView}`);
-      if (activePanel) activePanel.classList.add('active');
-
-      const viewTitle = btn.querySelector('span').textContent;
-      document.getElementById('current-view-title').textContent = viewTitle;
-
-      updateHeaderBreadcrumb();
-
-      if (targetView === 'metas') renderMetaProductsTable();
-      if (targetView === 'features') renderFeatureTree();
-      if (targetView === 'constraints') renderConstraintsTable();
-      if (targetView === 'test') setupTestingEngine();
+      if (view === 'meta-products') {
+        metaWorkspaceNav.classList.remove('hidden');
+        btnNewRequest.classList.add('hidden');
+        btnCreateMeta.classList.remove('hidden');
+        updatePortalBreadcrumb();
+      } else {
+        metaWorkspaceNav.classList.add('hidden');
+        btnNewRequest.classList.remove('hidden');
+        btnCreateMeta.classList.add('hidden');
+        document.getElementById('portal-breadcrumb').textContent = btn.querySelector('span').textContent;
+      }
     });
   });
 }
 
-function updateHeaderBreadcrumb() {
-  const prod = getActiveProduct();
-  const prodHeaderEl = document.getElementById('active-product-header-title');
-  const activeModelLabel = document.getElementById('active-model-label');
+// Nested Meta Products Sub-Navigation (Feature Hierarchy, Constraints, Testing, Export)
+function setupMetaSubNavigation() {
+  const subnavBtns = document.querySelectorAll('.meta-subnav-btn');
+  subnavBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const metaView = btn.getAttribute('data-meta-view');
+      state.currentMetaSubView = metaView;
 
-  if (prodHeaderEl) prodHeaderEl.textContent = prod.name;
-  if (activeModelLabel) activeModelLabel.textContent = prod.name;
+      subnavBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      document.querySelectorAll('.meta-inner-view').forEach(v => v.classList.remove('active'));
+      const target = document.getElementById(`meta-view-${metaView}`);
+      if (target) target.classList.add('active');
+
+      updatePortalBreadcrumb();
+
+      if (metaView === 'metas') renderMetaProductsTable();
+      if (metaView === 'features') renderFeatureTree();
+      if (metaView === 'constraints') renderConstraintsTable();
+      if (metaView === 'test') setupTestingEngine();
+      if (metaView === 'export') updateExportCode();
+    });
+  });
+}
+
+function updatePortalBreadcrumb() {
+  const prod = getActiveProduct();
+  const breadcrumb = document.getElementById('portal-breadcrumb');
+  const modelLabel = document.getElementById('sidebar-active-model');
+
+  if (modelLabel) modelLabel.textContent = prod.name;
+
+  const viewTitles = {
+    metas: 'Product Catalog',
+    features: 'Feature Hierarchy',
+    constraints: 'Constraints Overview',
+    test: 'Model Testing',
+    export: 'Export'
+  };
+
+  if (state.currentPortalTab === 'meta-products') {
+    breadcrumb.innerHTML = `Meta Products / <strong>${prod.name}</strong> / ${viewTitles[state.currentMetaSubView] || ''}`;
+  }
 
   const badgeCount = document.getElementById('badge-constraint-count');
   if (badgeCount) badgeCount.textContent = prod.constraints ? prod.constraints.length : 0;
 }
 
+// Render Meta Products Catalog Table
 function renderMetaProductsTable() {
   const tbody = document.getElementById('tbody-metas');
   if (!tbody) return;
@@ -272,17 +310,18 @@ function renderMetaProductsTable() {
 
 function openProduct(productId) {
   state.activeModelId = productId;
+  const prod = getActiveProduct();
 
-  updateHeaderBreadcrumb();
-
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const featBtn = document.querySelector('.nav-btn[data-view="features"]');
+  // Switch to Feature Hierarchy child tab
+  state.currentMetaSubView = 'features';
+  document.querySelectorAll('.meta-subnav-btn').forEach(b => b.classList.remove('active'));
+  const featBtn = document.querySelector('.meta-subnav-btn[data-meta-view="features"]');
   if (featBtn) featBtn.classList.add('active');
 
-  document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
-  document.getElementById('view-features').classList.add('active');
-  document.getElementById('current-view-title').textContent = 'Feature Hierarchy';
+  document.querySelectorAll('.meta-inner-view').forEach(v => v.classList.remove('active'));
+  document.getElementById('meta-view-features').classList.add('active');
 
+  updatePortalBreadcrumb();
   renderFeatureTree();
   renderConstraintsTable();
   setupTestingEngine();
@@ -303,7 +342,6 @@ function setupHeaderCreateButton() {
     });
 
     const closeModal = () => modal.classList.remove('open');
-
     if (btnClose) btnClose.addEventListener('click', closeModal);
     if (btnCancel) btnCancel.addEventListener('click', closeModal);
 
@@ -311,16 +349,15 @@ function setupHeaderCreateButton() {
       e.preventDefault();
       const name = document.getElementById('create-product-name').value.trim();
       const line = document.getElementById('create-product-line').value;
-
       if (!name) return;
 
-      const newId = 'door-' + Date.now();
+      const newId = 'prod-' + Date.now();
       const newProduct = {
         id: newId,
         name: name,
         line: line,
-        creator: 'Alex Rivera',
-        lastEditor: 'Alex Rivera',
+        creator: 'Koganti, Sri krishna C',
+        lastEditor: 'Koganti, Sri krishna C',
         lastModified: new Date().toISOString().split('T')[0],
         features: [
           mkNode('Root Component', { required: true })
@@ -335,102 +372,7 @@ function setupHeaderCreateButton() {
   }
 }
 
-function getAllFlatFeatures(nodes, result = []) {
-  nodes.forEach(n => {
-    result.push(n);
-    if (n.children && n.children.length > 0) {
-      getAllFlatFeatures(n.children, result);
-    }
-  });
-  return result;
-}
-
-function setupRuleConstraintModal() {
-  const modal = document.getElementById('rule-constraint-modal');
-  const btnAddOverview = document.getElementById('btn-add-constraint');
-  const btnAddDrawer = document.getElementById('btn-add-rule-from-drawer');
-  const btnClose = document.getElementById('btn-close-rule-modal');
-  const btnCancel = document.getElementById('btn-cancel-rule-modal');
-  const form = document.getElementById('form-rule-constraint');
-
-  const openModal = () => {
-    const prod = getActiveProduct();
-    const flatList = getAllFlatFeatures(prod.features);
-
-    const ifSelect = document.getElementById('rule-if-feature');
-    const thenSelect = document.getElementById('rule-then-feature');
-
-    ifSelect.innerHTML = '';
-    thenSelect.innerHTML = '';
-
-    flatList.forEach(f => {
-      const opt1 = document.createElement('option');
-      opt1.value = f.name;
-      opt1.textContent = f.name;
-      ifSelect.appendChild(opt1);
-
-      const opt2 = document.createElement('option');
-      opt2.value = f.name;
-      opt2.textContent = f.name;
-      thenSelect.appendChild(opt2);
-    });
-
-    if (state.selectedFeatureId) {
-      const found = findNodeInTree(state.selectedFeatureId, prod.features);
-      if (found) {
-        ifSelect.value = found.node.name;
-      }
-    }
-
-    form.reset();
-    modal.classList.add('open');
-  };
-
-  const closeModal = () => modal.classList.remove('open');
-
-  if (btnAddOverview) btnAddOverview.addEventListener('click', openModal);
-  if (btnAddDrawer) btnAddDrawer.addEventListener('click', openModal);
-  if (btnClose) btnClose.addEventListener('click', closeModal);
-  if (btnCancel) btnCancel.addEventListener('click', closeModal);
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const prod = getActiveProduct();
-    const name = document.getElementById('rule-name').value.trim();
-    const ifFeature = document.getElementById('rule-if-feature').value;
-    const ifOp = document.getElementById('rule-if-operator').value;
-    const thenAction = document.getElementById('rule-then-action').value;
-    const thenFeature = document.getElementById('rule-then-feature').value;
-
-    const opText = ifOp === 'equals' ? 'Selected' : 'Not Selected';
-    const actionText = thenAction === 'exclude' ? 'CANNOT BE Selected' : 'MUST BE Selected';
-    const logicSummary = `IF ${ifFeature} == ${opText} THEN ${thenFeature} ${actionText}`;
-
-    const newConstraint = {
-      id: 'c-' + Date.now(),
-      name,
-      type: 'rule',
-      affectedFeatures: [ifFeature, thenFeature],
-      ifFeature,
-      ifOperator: ifOp,
-      thenAction,
-      thenFeature,
-      logic: logicSummary
-    };
-
-    if (!prod.constraints) prod.constraints = [];
-    prod.constraints.push(newConstraint);
-
-    closeModal();
-    updateHeaderBreadcrumb();
-    renderConstraintsTable();
-    setupTestingEngine();
-    updateExportCode();
-
-    showToast('Rule constraint created successfully.');
-  });
-}
-
+// Tree Node Lookup Functions
 function findNodeInTree(id, nodes) {
   for (let i = 0; i < nodes.length; i++) {
     if (nodes[i].id === id) return { node: nodes[i], parent: null, index: i, siblings: nodes };
@@ -453,6 +395,7 @@ function findNodeInTreeSub(id, children, parent) {
   return null;
 }
 
+// Tree Operations: Add, Indent, Outdent, Split
 function addChildNode(id) {
   const prod = getActiveProduct();
   const found = findNodeInTree(id, prod.features);
@@ -572,13 +515,13 @@ function onNameInputKeydown(e, node) {
   }
 }
 
+// Render Tree DOM
 function renderFeatureTree() {
   const container = document.getElementById('feature-tree');
   if (!container) return;
   container.innerHTML = '';
 
   const prod = getActiveProduct();
-
   const ul = document.createElement('ul');
   ul.className = 'tree';
 
@@ -618,7 +561,6 @@ function createTreeNodeDOM(node, isRoot = false) {
   row.className = `tree-row ${isRoot ? 'root-row' : ''}`;
   row.dataset.id = node.id;
 
-  // Grip
   const grip = document.createElement('span');
   grip.className = 'grip';
   grip.innerHTML = `<i data-lucide="grip-vertical" class="icon-sm"></i>`;
@@ -740,7 +682,7 @@ function renderDrawerRelatedConstraints(feature) {
   const related = prod.constraints ? prod.constraints.filter(c => c.affectedFeatures.includes(feature.name)) : [];
 
   if (related.length === 0) {
-    chipContainer.innerHTML = '<span class="text-muted" style="color:var(--text-muted); font-size:0.85rem;">No rules directly affect this feature.</span>';
+    chipContainer.innerHTML = '<span style="color:#64748b; font-size:0.8rem;">No rules directly affect this feature.</span>';
   } else {
     related.forEach(r => {
       const chip = document.createElement('div');
@@ -789,7 +731,7 @@ function renderConstraintsTable() {
   const prod = getActiveProduct();
 
   if (!prod.constraints || prod.constraints.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No rules created for this product yet. Click 'Create Constraint Rule' above.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b;">No rules created for this product yet. Click 'Create Constraint Rule' above.</td></tr>`;
     return;
   }
 
@@ -798,7 +740,7 @@ function renderConstraintsTable() {
     tr.innerHTML = `
       <td><strong>${c.name}</strong></td>
       <td><span class="tree-tag">${c.type.toUpperCase()}</span></td>
-      <td>${c.affectedFeatures.map(f => `<span class="constraint-count-badge">${f}</span>`).join(' ')}</td>
+      <td>${c.affectedFeatures.map(f => `<span class="tree-tag">${f}</span>`).join(' ')}</td>
       <td><code>${c.logic}</code></td>
       <td>
         <button class="btn-icon" title="Delete Constraint" onclick="deleteConstraint(${idx})"><i data-lucide="trash-2"></i></button>
@@ -814,12 +756,108 @@ function deleteConstraint(index) {
   const prod = getActiveProduct();
   if (prod.constraints && prod.constraints[index]) {
     prod.constraints.splice(index, 1);
-    updateHeaderBreadcrumb();
+    updatePortalBreadcrumb();
     renderConstraintsTable();
     setupTestingEngine();
     updateExportCode();
     showToast('Rule constraint removed.');
   }
+}
+
+function getAllFlatFeatures(nodes, result = []) {
+  nodes.forEach(n => {
+    result.push(n);
+    if (n.children && n.children.length > 0) {
+      getAllFlatFeatures(n.children, result);
+    }
+  });
+  return result;
+}
+
+function setupRuleConstraintModal() {
+  const modal = document.getElementById('rule-constraint-modal');
+  const btnAddOverview = document.getElementById('btn-add-constraint');
+  const btnAddDrawer = document.getElementById('btn-add-rule-from-drawer');
+  const btnClose = document.getElementById('btn-close-rule-modal');
+  const btnCancel = document.getElementById('btn-cancel-rule-modal');
+  const form = document.getElementById('form-rule-constraint');
+
+  const openModal = () => {
+    const prod = getActiveProduct();
+    const flatList = getAllFlatFeatures(prod.features);
+
+    const ifSelect = document.getElementById('rule-if-feature');
+    const thenSelect = document.getElementById('rule-then-feature');
+
+    ifSelect.innerHTML = '';
+    thenSelect.innerHTML = '';
+
+    flatList.forEach(f => {
+      const opt1 = document.createElement('option');
+      opt1.value = f.name;
+      opt1.textContent = f.name;
+      ifSelect.appendChild(opt1);
+
+      const opt2 = document.createElement('option');
+      opt2.value = f.name;
+      opt2.textContent = f.name;
+      thenSelect.appendChild(opt2);
+    });
+
+    if (state.selectedFeatureId) {
+      const found = findNodeInTree(state.selectedFeatureId, prod.features);
+      if (found) {
+        ifSelect.value = found.node.name;
+      }
+    }
+
+    form.reset();
+    modal.classList.add('open');
+  };
+
+  const closeModal = () => modal.classList.remove('open');
+
+  if (btnAddOverview) btnAddOverview.addEventListener('click', openModal);
+  if (btnAddDrawer) btnAddDrawer.addEventListener('click', openModal);
+  if (btnClose) btnClose.addEventListener('click', closeModal);
+  if (btnCancel) btnCancel.addEventListener('click', closeModal);
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const prod = getActiveProduct();
+    const name = document.getElementById('rule-name').value.trim();
+    const ifFeature = document.getElementById('rule-if-feature').value;
+    const ifOp = document.getElementById('rule-if-operator').value;
+    const thenAction = document.getElementById('rule-then-action').value;
+    const thenFeature = document.getElementById('rule-then-feature').value;
+
+    const opText = ifOp === 'equals' ? 'Selected' : 'Not Selected';
+    const actionText = thenAction === 'exclude' ? 'CANNOT BE Selected' : 'MUST BE Selected';
+    const logicSummary = `IF ${ifFeature} == ${opText} THEN ${thenFeature} ${actionText}`;
+
+    const newConstraint = {
+      id: 'c-' + Date.now(),
+      name,
+      type: 'rule',
+      affectedFeatures: [ifFeature, thenFeature],
+      ifFeature,
+      ifOperator: ifOp,
+      thenAction,
+      thenFeature,
+      logic: logicSummary
+    };
+
+    if (!prod.constraints) prod.constraints = [];
+    prod.constraints.push(newConstraint);
+
+    closeModal();
+    updatePortalBreadcrumb();
+    renderConstraintsTable();
+    setupTestingEngine();
+    updateExportCode();
+
+    showToast('Rule constraint created successfully.');
+  });
 }
 
 function setupBulkModal() {
@@ -845,7 +883,6 @@ function setupBulkModal() {
   });
 
   const closeModal = () => modal.classList.remove('open');
-
   if (closeBtn) closeBtn.addEventListener('click', closeModal);
   if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
 
@@ -872,7 +909,7 @@ function setupBulkModal() {
   }
 }
 
-// Model Testing Engine with Dynamic Interactive Option Disabling
+// Model Testing Engine with Live Constraint Evaluation & Option Disabling
 function setupTestingEngine() {
   const container = document.getElementById('test-form-container');
   if (!container) return;
@@ -933,7 +970,7 @@ function runTestEngineValidation() {
   const selects = Array.from(document.querySelectorAll('.test-select'));
   const selectedValues = selects.map(s => s.value).filter(Boolean);
 
-  // Reset all option enabled states
+  // Reset disabled options
   selects.forEach(s => {
     Array.from(s.options).forEach(opt => {
       opt.disabled = false;
@@ -950,13 +987,11 @@ function runTestEngineValidation() {
     prod.constraints.forEach(c => {
       const li = document.createElement('li');
       li.style.marginBottom = '6px';
-      li.style.fontSize = '0.85rem';
+      li.style.fontSize = '0.8rem';
 
       const ifMatched = selectedValues.includes(c.ifFeature);
 
-      // Check if IF condition triggers restriction
       if (c.ifOperator === 'equals' && ifMatched) {
-        // Disable target options dynamically
         selects.forEach(s => {
           Array.from(s.options).forEach(opt => {
             const isTargetFeature = opt.dataset.nodeName === c.thenFeature || 
